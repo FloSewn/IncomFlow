@@ -1,0 +1,9 @@
+build/*
+bin/*
+lib/*
+*.o
+*.dat
+*.pdf
+share/python/pics/*.png
+src/tags
+literature/*
