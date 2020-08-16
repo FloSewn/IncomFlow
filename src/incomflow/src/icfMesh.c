@@ -220,6 +220,11 @@ void icfMesh_refine(icfFlowData *flowData, icfMesh *mesh)
 {
   icfListNode *cur;
 
+  int nSplit = 0;
+
+  icfDouble ICF_MAX_RATIO = 4.;
+  int       ICF_MAX_SPLIT = 2;
+
   icfRefineFun refineFun = flowData->refineFun;
   check(refineFun != NULL,
       "Refinement function has not been defined.");
@@ -232,13 +237,162 @@ void icfMesh_refine(icfFlowData *flowData, icfMesh *mesh)
   {
     icfTri *t = (icfTri*)cur->value;
 
-    if (refineFun(flowData, t) == TRUE)
+    if (refineFun(flowData, t) == TRUE && t->isSplit == FALSE)
+    {
       icfTri_markToSplit(t);
+      nSplit++;
+    }
   }
 
+  /*-------------------------------------------------------
+  | Split all marked edges 
+  | and perform successive triangle marking if triangles
+  | have bad aspect ratios
+  -------------------------------------------------------*/
+  int iter = 0;
 
+  while (nSplit > 0 && iter < ICF_MAX_SPLIT)
+  {
+    nSplit = 0;
+    iter  += 1;
+
+    for (cur = mesh->edgeStack->first; 
+         cur != NULL; cur = cur->next)
+    {
+      icfEdge *e = (icfEdge*)cur->value;
+
+      if (e->split == TRUE && e->isSplit == FALSE)
+        icfEdge_split(e);
+    }
+
+    /*-------------------------------------------------------
+    | Mark all triangles and respective edges to refine
+    | if their aspect ratio is bad
+    -------------------------------------------------------*/
+    for (cur = mesh->triStack->first; 
+         cur != NULL; cur = cur->next)
+    {
+      icfTri *t = (icfTri*)cur->value;
+
+      if (t->aspectRatio > ICF_MAX_RATIO 
+          && t->isSplit == FALSE)
+      {
+        icfTri_markToSplit(t);
+        nSplit++;
+      }
+    }
+  }
+
+  
   return;
 error:
   return;
 
 } /* icfMesh_refine() */
+
+
+/**********************************************************
+* Function: icfMesh_printMesh()
+*----------------------------------------------------------
+* Fuction to print out the mesh data
+*----------------------------------------------------------
+* @param mesh: pointer to mesh structure
+**********************************************************/
+void icfMesh_printMesh(icfMesh *mesh) 
+{
+  icfListNode *cur;
+  int node_index = 0;
+  int edge_index = 0;
+  int tri_index  = 0;
+
+  /*-------------------------------------------------------
+  | Set node indices and print node coordinates
+  -------------------------------------------------------*/
+  fprintf(stdout,"NODES %d\n", mesh->nNodes);
+  for (cur = mesh->nodeStack->first; 
+       cur != NULL; cur = cur->next)
+  {
+    icfDouble *xy = ((icfNode*)cur->value)->xy;
+    ((icfNode*)cur->value)->index = node_index;
+    fprintf(stdout,"%d\t%9.5f\t%9.5f\n", node_index, xy[0], xy[1]);
+    node_index += 1;
+  }
+
+  /*-------------------------------------------------------
+  | print triangles
+  -------------------------------------------------------*/
+  fprintf(stdout,"TRIANGLES %d\n", mesh->nTris);
+  for (cur = mesh->triStack->first; 
+       cur != NULL; cur = cur->next)
+  {
+    icfTri *curTri = (icfTri*)cur->value;
+    ((icfTri*)cur->value)->index = tri_index;
+
+    fprintf(stdout,"%d\t%d\t%d\t%d\n", 
+        tri_index, 
+        curTri->n[0]->index,
+        curTri->n[1]->index,
+        curTri->n[2]->index);
+
+    tri_index += 1;
+  }
+
+  /*-------------------------------------------------------
+  | print mesh edges
+  -------------------------------------------------------*/
+  fprintf(stdout,"EDGES %d\n", mesh->nEdges);
+  for (cur = mesh->edgeStack->first; 
+       cur != NULL; cur = cur->next)
+  {
+    icfIndex n0 = ((icfEdge*)cur->value)->n[0]->index;
+    icfIndex n1 = ((icfEdge*)cur->value)->n[1]->index;
+
+    icfIndex i0 = -1;
+    icfIndex i1 = -1;
+
+    icfTri *t0 = ((icfEdge*)cur->value)->t[0];
+    icfTri *t1 = ((icfEdge*)cur->value)->t[1];
+
+    if (t0 != NULL)
+      i0 = t0->index;
+    if (t1 != NULL)
+      i1 = t1->index;
+
+    ((icfEdge*)cur->value)->index = edge_index;
+    fprintf(stdout,"%d\t%9d\t%9d\t%9d\t%9d\n", edge_index, 
+        n0, n1, i0, i1);
+    edge_index += 1;
+  }
+
+  /*-------------------------------------------------------
+  | print triangles neighbors
+  -------------------------------------------------------*/
+  fprintf(stdout,"TRI NEIGHBORS %d\n", mesh->nTris);
+  tri_index = 0;
+  for (cur = mesh->triStack->first; 
+       cur != NULL; cur = cur->next)
+  {
+    icfTri *curTri = (icfTri*)cur->value;
+
+    icfTri *t0 = ((icfTri*)cur->value)->t[0];
+    icfTri *t1 = ((icfTri*)cur->value)->t[1];
+    icfTri *t2 = ((icfTri*)cur->value)->t[2];
+
+    icfIndex i0 = -1;
+    icfIndex i1 = -1;
+    icfIndex i2 = -1;
+
+    if (t0 != NULL)
+      i0 = t0->index;
+    if (t1 != NULL)
+      i1 = t1->index;
+    if (t2 != NULL)
+      i2 = t2->index;
+
+    fprintf(stdout,"%d\t%9d\t%9d\t%9d\n", 
+        tri_index, i0, i1, i2);
+    
+    tri_index += 1;
+  } 
+
+} /* tmMesh_printMesh() */

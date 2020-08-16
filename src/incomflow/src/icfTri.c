@@ -12,6 +12,7 @@
 #include "incomflow/icfEdge.h"
 #include "incomflow/icfNode.h"
 #include "incomflow/icfFlowData.h"
+#include "incomflow/dbg.h"
 
 /**********************************************************
 * Function: icfTri_create
@@ -63,8 +64,10 @@ icfTri *icfTri_create(icfMesh *mesh)
   /*-------------------------------------------------------
   | Triangle properties
   -------------------------------------------------------*/
-  tri->index = -1;
-  tri->split = FALSE;
+  tri->index       = -1;
+  tri->split       = FALSE;
+  tri->isSplit     = FALSE;
+  tri->aspectRatio = 0.0;
 
   /*-------------------------------------------------------
   | Position of this triangle in mesh stack 
@@ -127,6 +130,24 @@ void icfTri_setEdges(icfTri  *tri,
   tri->e[0] = e0;
   tri->e[1] = e1;
   tri->e[2] = e2;
+
+
+  /*-------------------------------------------------------
+  | Compute triangle aspect ratio
+  -------------------------------------------------------*/
+  int i;
+  icfDouble eMin = 1e10;
+  icfDouble eMax =-1e10;
+
+  for (i = 0; i < 3; i++)
+  {
+    eMin = tri->e[i]->len < eMin ? tri->e[i]->len : eMin;
+    eMax = tri->e[i]->len > eMax ? tri->e[i]->len : eMax;
+  }
+
+  tri->aspectRatio = eMax / eMin;
+
+
 } /*icfTri_setEdges() */
 
 /**********************************************************
@@ -184,16 +205,30 @@ void icfTri_markToSplit(icfTri *tri)
         iNb = i;
       }
   }
+  check(eL != NULL, "Triangle has wrong edge connectivity");
 
   /*-------------------------------------------------------
   | Mark elments for splitting
   -------------------------------------------------------*/
   tri->split         = TRUE;
+  tri->e_split       = eL;
   eL->split          = TRUE;
 
   if (tri->t[iNb] != NULL)
+  {
     tri->t[iNb]->split = TRUE;
+    tri->t[iNb]->e_split = eL;
+  }
 
-  icfPrint("TRI SPLITTED");
 
-} /* icfTri_markToRefine() */
+#if (ICF_DEBUG > 2)
+  icfPrint("MARKED EDGE (%d,%d) IN TRIANGLE (%d,%d,%d) FOR SPLITTING",
+      eL->n[0]->index, eL->n[1]->index,
+      tri->n[0]->index, tri->n[1]->index, tri->n[2]->index);
+#endif
+
+  return;
+error:
+  return;
+
+} /* icfTri_markToSplit() */

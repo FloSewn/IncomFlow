@@ -33,7 +33,7 @@ typedef struct icfEdge {
   /*-------------------------------------------------------
   | Children
   -------------------------------------------------------*/
-  icfEdge *e_c[2];
+  icfEdge *e_c[4];
   icfNode *n_c;
 
   /*-------------------------------------------------------
@@ -51,7 +51,9 @@ typedef struct icfEdge {
   -------------------------------------------------------*/
   icfIndex  index; 
   icfBool   split;
+  icfBool   isSplit;
   icfDouble len;
+  icfDouble centroid[2];
 
   /*-------------------------------------------------------
   | Position in mesh's edge stack
@@ -106,5 +108,15 @@ void icfEdge_setNodes(icfEdge *edge,
 void icfEdge_setTris(icfEdge *edge, 
                      icfTri  *t0,
                      icfTri  *t1);
+
+/**********************************************************
+* Function: icfEdge_split
+*----------------------------------------------------------
+* Split a marked edge 
+* @param: e - edge structure to split
+*----------------------------------------------------------
+* 
+**********************************************************/
+void icfEdge_split(icfEdge *e);
 
 #endif

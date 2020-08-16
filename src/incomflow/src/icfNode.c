@@ -38,7 +38,7 @@ icfNode *icfNode_create(icfMesh *mesh, icfDouble *xy)
   /*-------------------------------------------------------
   | Node index 
   -------------------------------------------------------*/
-  node->index  = -1;
+  node->index  = mesh->nodeStack->count;
 
   /*-------------------------------------------------------
   | Position of this node in the mesh stack 

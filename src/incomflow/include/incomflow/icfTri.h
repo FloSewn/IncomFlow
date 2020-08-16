@@ -54,6 +54,7 @@ typedef struct icfTri {
   | Defining edges: 
   -------------------------------------------------------*/
   icfEdge *e[3];
+  icfEdge *e_split;
 
   /*-------------------------------------------------------
   | Adjacent triangles: 
@@ -65,6 +66,8 @@ typedef struct icfTri {
   -------------------------------------------------------*/
   icfIndex  index; 
   icfBool   split;
+  icfBool   isSplit;
+  icfDouble aspectRatio;
 
   /*-------------------------------------------------------
   | Position of this triangle in mesh stack 

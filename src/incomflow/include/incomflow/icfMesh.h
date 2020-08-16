@@ -117,4 +117,13 @@ void icfMesh_remTri(icfMesh *mesh, icfTri *tri);
 **********************************************************/
 void icfMesh_refine(icfFlowData *flowData, icfMesh *mesh);
 
+/**********************************************************
+* Function: icfMesh_printMesh()
+*----------------------------------------------------------
+* Fuction to print out the mesh data
+*----------------------------------------------------------
+* @param mesh: pointer to mesh structure
+**********************************************************/
+void icfMesh_printMesh(icfMesh *mesh);
+
 #endif

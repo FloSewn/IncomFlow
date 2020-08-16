@@ -47,7 +47,7 @@ typedef icfBool (*icfRefineFun) (icfFlowData *flowData, icfTri *tri);
 * Debugging Layers
 * 0 -> No output
 ***********************************************************/
-#define ICF_DEBUG 0
+#define ICF_DEBUG 3
 
 #ifdef ICF_DEBUG 
 #define icfPrint(M, ...) fprintf(stdout, "> " M "\n",\

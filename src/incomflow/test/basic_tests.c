@@ -28,7 +28,8 @@ static inline icfBool refineFun(icfFlowData *flowData,
   xc /= 3.0;
   yc /= 3.0;
 
-  if (xc > 0.5 && yc < 0.5)
+
+  if (xc > 0.5 && yc <= 0.5)
     return TRUE;
 
   return FALSE;
@@ -91,19 +92,35 @@ char *test_basic_structures()
   ----------------------------------------------------------*/
   icfTri *t0 = icfTri_create(mesh);
   icfTri_setNodes(t0, n0, n1, n2);
-  icfTri_setEdges(t0, e0, e1, e2);
+  icfTri_setEdges(t0, e0, e1, e4);
 
   icfTri *t1 = icfTri_create(mesh);
   icfTri_setNodes(t1, n2, n3, n0);
-  icfTri_setEdges(t1, e2, e3, e0);
+  icfTri_setEdges(t1, e2, e3, e4);
 
   icfTri_setTris(t0, NULL, t1, NULL);
   icfTri_setTris(t1, NULL, t0, NULL);
 
+  icfEdge_setTris(e0, t0, NULL);
+  icfEdge_setTris(e1, t0, NULL);
+  icfEdge_setTris(e2, t1, NULL);
+  icfEdge_setTris(e3, t1, NULL);
+  icfEdge_setTris(e4, t1, t0);
+
   /*----------------------------------------------------------
   | Refine the mesh
   ----------------------------------------------------------*/
-  icfMesh_refine(flowData, mesh);
+  int i = 0;
+  for (i = 0; i < 5; i++)
+  {
+    icfPrint("------- ITERATION %d --------", i);
+    icfMesh_refine(flowData, mesh);
+  }
+
+  /*----------------------------------------------------------
+  | Print the mesh
+  ----------------------------------------------------------*/
+  icfMesh_printMesh(mesh);
 
   /*----------------------------------------------------------
   | Clear structures
