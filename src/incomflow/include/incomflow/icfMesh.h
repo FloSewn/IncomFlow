@@ -31,6 +31,20 @@ typedef struct icfMesh {
   int      nTris;
   icfList *triStack;
 
+  /*-------------------------------------------------------
+  | Mesh edge leafs 
+  -------------------------------------------------------*/
+  int        nEdgeLeafs;
+  icfEdge  **edgeLeafs;
+
+
+  /*-------------------------------------------------------
+  | Mesh triangle leafs 
+  -------------------------------------------------------*/
+  int       nTriLeafs;
+  icfTri  **triLeafs;
+
+
 } icfMesh;
 
 

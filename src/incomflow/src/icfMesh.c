@@ -44,6 +44,18 @@ icfMesh *icfMesh_create(void)
   mesh->nTris = 0;
   mesh->triStack = icfList_create();
 
+  /*-------------------------------------------------------
+  | Mesh edge leafs 
+  -------------------------------------------------------*/
+  mesh->nEdgeLeafs = 0;
+  mesh->edgeLeafs = (icfEdge**) calloc(0, sizeof(icfEdge*));
+
+  /*-------------------------------------------------------
+  | Mesh triangle leafs 
+  -------------------------------------------------------*/
+  mesh->nTriLeafs = 0;
+  mesh->triLeafs = (icfTri**) calloc(0, sizeof(icfTri*));
+
 
   return mesh;
 error:
@@ -111,6 +123,13 @@ int icfMesh_destroy(icfMesh *mesh)
   icfList_destroy(mesh->nodeStack);
   icfList_destroy(mesh->edgeStack);
   icfList_destroy(mesh->triStack);
+
+  /*-------------------------------------------------------
+  | Free all mesh leaf arrays
+  -------------------------------------------------------*/
+  free(mesh->edgeLeafs);
+  free(mesh->triLeafs);
+
 
   /*-------------------------------------------------------
   | Finally free mesh structure memory
@@ -222,8 +241,8 @@ void icfMesh_refine(icfFlowData *flowData, icfMesh *mesh)
 
   int nSplit = 0;
 
-  icfDouble ICF_MAX_RATIO = 4.;
-  int       ICF_MAX_SPLIT = 2;
+  icfDouble ICF_MAX_RATIO = 4.0;
+  int       ICF_MAX_SPLIT = 1;
 
   icfRefineFun refineFun = flowData->refineFun;
   check(refineFun != NULL,
@@ -283,6 +302,85 @@ void icfMesh_refine(icfFlowData *flowData, icfMesh *mesh)
     }
   }
 
+  /*-------------------------------------------------------
+  | Count leafs in both triangle- and edge-trees
+  -------------------------------------------------------*/
+  int nTriLeafs = 0;
+  int nEdgeLeafs = 0;
+
+  for (cur = mesh->triStack->first; 
+       cur != NULL; cur = cur->next)
+  {
+    icfTri *t = (icfTri*)cur->value;
+
+    if (t->isSplit == FALSE)
+      nTriLeafs += 1;
+  }
+
+  for (cur = mesh->edgeStack->first; 
+       cur != NULL; cur = cur->next)
+  {
+    icfEdge *e = (icfEdge*)cur->value;
+
+    if (e->isSplit == FALSE)
+      nEdgeLeafs += 1;
+  }
+
+  icfPrint("NUMBER OF EDGE LEAFS: %d",
+      nEdgeLeafs);
+  icfPrint("NUMBER OF TRIANGLE LEAFS: %d",
+      nTriLeafs);
+
+
+  /*-------------------------------------------------------
+  | reallocate memory for leafs
+  -------------------------------------------------------*/
+  icfEdge **newEdgeLeafs;
+  mesh->nEdgeLeafs = nEdgeLeafs;
+  newEdgeLeafs = (icfEdge**) realloc(mesh->edgeLeafs, 
+      nEdgeLeafs*sizeof(icfEdge*));
+  if (newEdgeLeafs != NULL)
+    mesh->edgeLeafs = newEdgeLeafs;
+
+  icfTri **newTriLeafs;
+  mesh->nTriLeafs = nTriLeafs;
+  newTriLeafs = (icfTri**) realloc(mesh->triLeafs, 
+      nTriLeafs*sizeof(icfTri*));
+  mesh->triLeafs = newTriLeafs;
+
+  /*-------------------------------------------------------
+  | Set pointer-array to triangles
+  -------------------------------------------------------*/
+  int iTri  = 0;
+  
+  for (cur = mesh->triStack->first; 
+       cur != NULL; cur = cur->next)
+  {
+    icfTri *t = (icfTri*)cur->value;
+
+    if (t->isSplit == FALSE)
+    {
+      mesh->triLeafs[iTri] = t;
+      iTri++;
+    }
+  }
+
+  /*-------------------------------------------------------
+  | Set pointer-array to edges
+  -------------------------------------------------------*/
+  int iEdge = 0;
+  for (cur = mesh->edgeStack->first; 
+       cur != NULL; cur = cur->next)
+  {
+    icfEdge *e = (icfEdge*)cur->value;
+
+    if (e->isSplit == FALSE)
+    {
+      mesh->edgeLeafs[iEdge] = e;
+      iEdge++;
+    }
+  }
+
   
   return;
 error:
@@ -301,6 +399,7 @@ error:
 void icfMesh_printMesh(icfMesh *mesh) 
 {
   icfListNode *cur;
+  int i;
   int node_index = 0;
   int edge_index = 0;
   int tri_index  = 0;
@@ -321,62 +420,58 @@ void icfMesh_printMesh(icfMesh *mesh)
   /*-------------------------------------------------------
   | print triangles
   -------------------------------------------------------*/
-  fprintf(stdout,"TRIANGLES %d\n", mesh->nTris);
-  for (cur = mesh->triStack->first; 
-       cur != NULL; cur = cur->next)
+  fprintf(stdout,"TRIANGLES %d\n", mesh->nTriLeafs);
+  for (i = 0; i < mesh->nTriLeafs; i++)
   {
-    icfTri *curTri = (icfTri*)cur->value;
-    ((icfTri*)cur->value)->index = tri_index;
+    icfTri *curTri = mesh->triLeafs[i];
+    curTri->index = i;
 
     fprintf(stdout,"%d\t%d\t%d\t%d\n", 
-        tri_index, 
+        i, 
         curTri->n[0]->index,
         curTri->n[1]->index,
         curTri->n[2]->index);
-
-    tri_index += 1;
   }
 
   /*-------------------------------------------------------
   | print mesh edges
   -------------------------------------------------------*/
-  fprintf(stdout,"EDGES %d\n", mesh->nEdges);
-  for (cur = mesh->edgeStack->first; 
-       cur != NULL; cur = cur->next)
+  fprintf(stdout,"EDGES %d\n", mesh->nEdgeLeafs);
+  for (i = 0; i < mesh->nEdgeLeafs; i++)
   {
-    icfIndex n0 = ((icfEdge*)cur->value)->n[0]->index;
-    icfIndex n1 = ((icfEdge*)cur->value)->n[1]->index;
+    icfEdge *curEdge = mesh->edgeLeafs[i];
+
+    icfIndex n0 = curEdge->n[0]->index;
+    icfIndex n1 = curEdge->n[1]->index;
 
     icfIndex i0 = -1;
     icfIndex i1 = -1;
 
-    icfTri *t0 = ((icfEdge*)cur->value)->t[0];
-    icfTri *t1 = ((icfEdge*)cur->value)->t[1];
+    icfTri *t0 = curEdge->t[0];
+    icfTri *t1 = curEdge->t[1];
 
     if (t0 != NULL)
       i0 = t0->index;
     if (t1 != NULL)
       i1 = t1->index;
 
-    ((icfEdge*)cur->value)->index = edge_index;
-    fprintf(stdout,"%d\t%9d\t%9d\t%9d\t%9d\n", edge_index, 
+    curEdge->index = i;
+    fprintf(stdout,"%d\t%9d\t%9d\t%9d\t%9d\n", i, 
         n0, n1, i0, i1);
-    edge_index += 1;
   }
 
   /*-------------------------------------------------------
   | print triangles neighbors
   -------------------------------------------------------*/
-  fprintf(stdout,"TRI NEIGHBORS %d\n", mesh->nTris);
-  tri_index = 0;
-  for (cur = mesh->triStack->first; 
-       cur != NULL; cur = cur->next)
+  fprintf(stdout,"TRI NEIGHBORS %d\n", mesh->nTriLeafs);
+  
+  for (i = 0; i < mesh->nTriLeafs; i++)
   {
-    icfTri *curTri = (icfTri*)cur->value;
+    icfTri *curTri = mesh->triLeafs[i];
 
-    icfTri *t0 = ((icfTri*)cur->value)->t[0];
-    icfTri *t1 = ((icfTri*)cur->value)->t[1];
-    icfTri *t2 = ((icfTri*)cur->value)->t[2];
+    icfTri *t0 = curTri->t[0];
+    icfTri *t1 = curTri->t[1];
+    icfTri *t2 = curTri->t[2];
 
     icfIndex i0 = -1;
     icfIndex i1 = -1;

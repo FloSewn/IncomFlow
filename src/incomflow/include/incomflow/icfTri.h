@@ -67,6 +67,7 @@ typedef struct icfTri {
   icfIndex  index; 
   icfBool   split;
   icfBool   isSplit;
+  icfIndex  treeLevel;
   icfDouble aspectRatio;
 
   /*-------------------------------------------------------

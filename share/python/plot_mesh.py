@@ -13,7 +13,7 @@ TRI_PATCH = {'edgecolors' : ['k'],
              'facecolors' : ['w'],
              'joinstyle'  : 'round',
              'capstyle'   : 'round',
-             'alpha'      : 0.5,
+             'alpha'      : 1.0,
              'cmap'       : 'coolwarm'}
 
 def read_meshdata(mesh_file):

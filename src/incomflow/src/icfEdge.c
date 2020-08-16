@@ -56,9 +56,10 @@ icfEdge *icfEdge_create(icfMesh *mesh)
   /*-------------------------------------------------------
   | Edge properties
   -------------------------------------------------------*/
-  edge->index    = -1;
-  edge->split    = FALSE;
-  edge->isSplit  = FALSE;
+  edge->index     = -1;
+  edge->split     = FALSE;
+  edge->isSplit   = FALSE;
+  edge->treeLevel = 0;
 
   /*-------------------------------------------------------
   | Position in mesh's edge stack
@@ -399,11 +400,13 @@ void icfEdge_split(icfEdge *e)
     t_L->split   = FALSE;
     t_L->isSplit = TRUE;
 
-    t_L->t_c[0]  = tL0;
-    tL0->parent  = t_L;
+    t_L->t_c[0]    = tL0;
+    tL0->parent    = t_L;
+    tL0->treeLevel = t_L->treeLevel + 1;
 
-    t_L->t_c[1]  = tL1;
-    tL1->parent  = t_L;
+    t_L->t_c[1]    = tL1;
+    tL1->parent    = t_L;
+    tL1->treeLevel = t_L->treeLevel + 1;
   }
 
 
@@ -414,11 +417,13 @@ void icfEdge_split(icfEdge *e)
     t_R->split   = FALSE;
     t_R->isSplit = TRUE;
 
-    t_R->t_c[0]  = tR0;
-    tR0->parent  = t_R;
+    t_R->t_c[0]    = tR0;
+    tR0->parent    = t_R;
+    tR0->treeLevel = t_R->treeLevel + 1;
 
-    t_R->t_c[1]  = tR1;
-    tR1->parent  = t_R;
+    t_R->t_c[1]    = tR1;
+    tR1->parent    = t_R;
+    tR1->treeLevel = t_R->treeLevel + 1;
   }
 
   /*-------------------------------------------------------
@@ -426,19 +431,27 @@ void icfEdge_split(icfEdge *e)
   -------------------------------------------------------*/
   e->isSplit = TRUE;
 
-  e->e_c[0] = eH0;
-  eH0->parent = e;
+  e->e_c[0]      = eH0;
+  eH0->parent    = e;
+  eH0->treeLevel = e->treeLevel + 1;
 
-  e->e_c[1] = eH1;
-  eH1->parent = e;
+  e->e_c[1]      = eH1;
+  eH1->parent    = e;
+  eH1->treeLevel = e->treeLevel + 1;
 
   e->e_c[2] = eV0;
   if (eV0 != NULL)
-    eV0->parent = e;
+  {
+    eV0->parent    = e;
+    eV0->treeLevel = e->treeLevel + 1;
+  }
 
   e->e_c[3] = eV1;
   if (eV1 != NULL)
-    eV1->parent = e;
+  {
+    eV1->parent    = e;
+    eV1->treeLevel = e->treeLevel + 1;
+  }
 
   return;
 error:

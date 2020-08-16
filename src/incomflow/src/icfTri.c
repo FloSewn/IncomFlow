@@ -68,6 +68,7 @@ icfTri *icfTri_create(icfMesh *mesh)
   tri->split       = FALSE;
   tri->isSplit     = FALSE;
   tri->aspectRatio = 0.0;
+  tri->treeLevel   = 0;
 
   /*-------------------------------------------------------
   | Position of this triangle in mesh stack 

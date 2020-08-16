@@ -54,6 +54,7 @@ typedef struct icfEdge {
   icfBool   isSplit;
   icfDouble len;
   icfDouble centroid[2];
+  icfIndex  treeLevel;
 
   /*-------------------------------------------------------
   | Position in mesh's edge stack

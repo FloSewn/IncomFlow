@@ -29,7 +29,7 @@ static inline icfBool refineFun(icfFlowData *flowData,
   yc /= 3.0;
 
 
-  if (xc > 0.5 && yc <= 0.5)
+  if (fabs(xc - 0.75) < 0.2)
     return TRUE;
 
   return FALSE;
