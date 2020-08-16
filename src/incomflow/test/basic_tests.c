@@ -8,6 +8,7 @@
 #include "incomflow/icfNode.h"
 #include "incomflow/icfEdge.h"
 #include "incomflow/icfTri.h"
+#include "incomflow/icfBdry.h"
 
 /*************************************************************
 * Dummy refinement function
@@ -51,6 +52,13 @@ char *test_basic_structures()
   flowData->mesh      = mesh;
   flowData->refineFun = refineFun;
 
+  /*----------------------------------------------------------
+  | Define boundaries
+  ----------------------------------------------------------*/
+  icfBdry *bdrySouth = icfBdry_create(mesh, 0, "SOUTH");
+  icfBdry *bdryEast  = icfBdry_create(mesh, 0, "EAST");
+  icfBdry *bdryNorth = icfBdry_create(mesh, 0, "NORTH");
+  icfBdry *bdryWest  = icfBdry_create(mesh, 0, "WEST");
 
   /*----------------------------------------------------------
   | Create mesh nodes
@@ -73,15 +81,19 @@ char *test_basic_structures()
   ----------------------------------------------------------*/
   icfEdge *e0   = icfEdge_create(mesh);
   icfEdge_setNodes(e0, n0, n1);
+  icfBdry_addEdge(bdrySouth, e0);
 
   icfEdge *e1   = icfEdge_create(mesh);
   icfEdge_setNodes(e1, n1, n2);
+  icfBdry_addEdge(bdryEast, e1);
 
   icfEdge *e2   = icfEdge_create(mesh);
   icfEdge_setNodes(e2, n2, n3);
+  icfBdry_addEdge(bdryNorth, e2);
 
   icfEdge *e3   = icfEdge_create(mesh);
   icfEdge_setNodes(e3, n3, n0);
+  icfBdry_addEdge(bdryWest, e3);
 
   icfEdge *e4   = icfEdge_create(mesh);
   icfEdge_setNodes(e4, n0, n2);

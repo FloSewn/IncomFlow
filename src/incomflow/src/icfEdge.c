@@ -9,6 +9,7 @@
 #include "incomflow/icfList.h"
 #include "incomflow/icfNode.h"
 #include "incomflow/icfEdge.h"
+#include "incomflow/icfBdry.h"
 #include "incomflow/icfTri.h"
 #include "incomflow/icfMesh.h"
 #include "incomflow/icfFlowData.h"
@@ -52,6 +53,12 @@ icfEdge *icfEdge_create(icfMesh *mesh)
   -------------------------------------------------------*/
   edge->t[0] = NULL;
   edge->t[1] = NULL;
+
+  /*-------------------------------------------------------
+  | Boundary properties
+  -------------------------------------------------------*/
+  edge->bdry         = NULL;
+  edge->bdryStackPos = NULL;
 
   /*-------------------------------------------------------
   | Edge properties
@@ -451,6 +458,15 @@ void icfEdge_split(icfEdge *e)
   {
     eV1->parent    = e;
     eV1->treeLevel = e->treeLevel + 1;
+  }
+
+  /*-------------------------------------------------------
+  | Set boundary properties for children
+  -------------------------------------------------------*/
+  if (e->bdry != NULL)
+  {
+    icfBdry_addEdge(e->bdry, eH0);
+    icfBdry_addEdge(e->bdry, eH1);
   }
 
   return;

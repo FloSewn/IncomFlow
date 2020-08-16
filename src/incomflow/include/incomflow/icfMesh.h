@@ -32,6 +32,12 @@ typedef struct icfMesh {
   icfList *triStack;
 
   /*-------------------------------------------------------
+  | Mesh boundaries 
+  -------------------------------------------------------*/
+  int      nBdrys;
+  icfList *bdryStack;
+
+  /*-------------------------------------------------------
   | Mesh edge leafs 
   -------------------------------------------------------*/
   int        nEdgeLeafs;
@@ -96,6 +102,15 @@ icfListNode *icfMesh_addEdge(icfMesh *mesh, icfEdge *edge);
 icfListNode *icfMesh_addTri(icfMesh *mesh, icfTri *tri);
 
 /**********************************************************
+* Function: icfMesh_addBdry()
+*----------------------------------------------------------
+* Function to add an icfBdry to an icfMesh
+*----------------------------------------------------------
+* @return: icfBdry list node on the mesh's bdry stack
+**********************************************************/
+icfListNode *icfMesh_addBdry(icfMesh *mesh, icfBdry *bdry);
+
+/**********************************************************
 * Function: icfMesh_remNode()
 *----------------------------------------------------------
 * Function to remove an icfNode from an icfMesh
@@ -121,6 +136,15 @@ void icfMesh_remEdge(icfMesh *mesh, icfEdge *edge);
 * 
 **********************************************************/
 void icfMesh_remTri(icfMesh *mesh, icfTri *tri);
+
+/**********************************************************
+* Function: icfMesh_remBdry()
+*----------------------------------------------------------
+* Function to remove an icfBdry from an icfMesh
+*----------------------------------------------------------
+* 
+**********************************************************/
+void icfMesh_remBdry(icfMesh *mesh, icfBdry *bdry);
 
 /**********************************************************
 * Function: icfMesh_refine()

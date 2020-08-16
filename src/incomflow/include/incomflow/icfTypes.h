@@ -35,6 +35,7 @@ typedef struct icfNode      icfNode;
 typedef struct icfEdge      icfEdge;
 typedef struct icfTri       icfTri;
 typedef struct icfMesh      icfMesh;
+typedef struct icfBdry      icfBdry;
 typedef struct icfFlowData  icfFlowData;
 
 /***********************************************************

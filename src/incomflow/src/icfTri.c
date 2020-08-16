@@ -9,6 +9,7 @@
 #include "incomflow/icfList.h"
 #include "incomflow/icfTri.h"
 #include "incomflow/icfMesh.h"
+#include "incomflow/icfBdry.h"
 #include "incomflow/icfEdge.h"
 #include "incomflow/icfNode.h"
 #include "incomflow/icfFlowData.h"

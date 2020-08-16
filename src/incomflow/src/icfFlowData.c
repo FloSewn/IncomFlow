@@ -8,6 +8,7 @@
 #include "incomflow/icfTypes.h"
 #include "incomflow/icfList.h"
 #include "incomflow/icfFlowData.h"
+#include "incomflow/icfBdry.h"
 #include "incomflow/icfMesh.h"
 #include "incomflow/icfNode.h"
 #include "incomflow/icfEdge.h"

@@ -8,6 +8,7 @@
 #include "incomflow/icfTypes.h"
 #include "incomflow/icfList.h"
 #include "incomflow/icfFlowData.h"
+#include "incomflow/icfBdry.h"
 #include "incomflow/icfMesh.h"
 #include "incomflow/icfNode.h"
 #include "incomflow/icfEdge.h"
@@ -43,6 +44,12 @@ icfMesh *icfMesh_create(void)
   -------------------------------------------------------*/
   mesh->nTris = 0;
   mesh->triStack = icfList_create();
+
+  /*-------------------------------------------------------
+  | Mesh boundaries 
+  -------------------------------------------------------*/
+  mesh->nBdrys = 0;
+  mesh->bdryStack = icfList_create();
 
   /*-------------------------------------------------------
   | Mesh edge leafs 
@@ -104,6 +111,20 @@ int icfMesh_destroy(icfMesh *mesh)
 #endif
 
   /*-------------------------------------------------------
+  | Free all bdrys on the stack
+  -------------------------------------------------------*/
+  cur = nxt = mesh->bdryStack->first;
+  while (nxt != NULL)
+  {
+    nxt = cur->next;
+    icfBdry_destroy(cur->value);
+    cur = nxt;
+  }
+#if (ICF_DEBUG > 0)
+  icfPrint("MESH BOUNDARIES FREE");
+#endif
+
+  /*-------------------------------------------------------
   | Free all nodes on the stack
   -------------------------------------------------------*/
   cur = nxt = mesh->nodeStack->first;
@@ -123,13 +144,13 @@ int icfMesh_destroy(icfMesh *mesh)
   icfList_destroy(mesh->nodeStack);
   icfList_destroy(mesh->edgeStack);
   icfList_destroy(mesh->triStack);
+  icfList_destroy(mesh->bdryStack);
 
   /*-------------------------------------------------------
   | Free all mesh leaf arrays
   -------------------------------------------------------*/
   free(mesh->edgeLeafs);
   free(mesh->triLeafs);
-
 
   /*-------------------------------------------------------
   | Finally free mesh structure memory
@@ -190,6 +211,21 @@ icfListNode *icfMesh_addTri(icfMesh *mesh, icfTri *tri)
 } /* icfMesh_addTri() */
 
 /**********************************************************
+* Function: icfMesh_addBdry()
+*----------------------------------------------------------
+* Function to add an icfBdry to an icfMesh
+*----------------------------------------------------------
+* @return: icfBdry list node on the mesh's bdry stack
+**********************************************************/
+icfListNode *icfMesh_addBdry(icfMesh *mesh, icfBdry *bdry)
+{
+  mesh->nBdrys += 1;
+  icfList_push(mesh->bdryStack, bdry);
+  icfListNode *bdryPos = icfList_last_node(mesh->bdryStack);
+  return bdryPos;
+} /* icfMesh_addBdry() */
+
+/**********************************************************
 * Function: icfMesh_remNode()
 *----------------------------------------------------------
 * Function to remove an icfNode from an icfMesh
@@ -227,6 +263,19 @@ void icfMesh_remTri(icfMesh *mesh, icfTri *tri)
   icfList_remove(mesh->triStack, tri->stackPos);
   mesh->nTris -= 1;
 } /* tmMesh_remTri() */
+
+/**********************************************************
+* Function: icfMesh_remBdry()
+*----------------------------------------------------------
+* Function to remove an icfBdry from an icfMesh
+*----------------------------------------------------------
+* 
+**********************************************************/
+void icfMesh_remBdry(icfMesh *mesh, icfBdry *bdry)
+{
+  icfList_remove(mesh->bdryStack, bdry->stackPos);
+  mesh->nBdrys -= 1;
+} /* tmMesh_remBdry() */
 
 /**********************************************************
 * Function: icfMesh_refine()

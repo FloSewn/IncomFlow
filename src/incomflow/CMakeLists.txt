@@ -13,6 +13,7 @@ set( INCOMFLOW_MAIN
   ${INCOMFLOW_SRC}/icfEdge.c
   ${INCOMFLOW_SRC}/icfTri.c
   ${INCOMFLOW_SRC}/icfMesh.c
+  ${INCOMFLOW_SRC}/icfBdry.c
   ${INCOMFLOW_SRC}/icfFlowData.c
   )
 
