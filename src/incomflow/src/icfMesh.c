@@ -462,7 +462,20 @@ void icfMesh_printMesh(icfMesh *mesh)
   {
     icfDouble *xy = ((icfNode*)cur->value)->xy;
     ((icfNode*)cur->value)->index = node_index;
-    fprintf(stdout,"%d\t%9.5f\t%9.5f\n", node_index, xy[0], xy[1]);
+
+    char *bdry_0, *bdry_1;
+    icfNode *curNode = (icfNode*)cur->value;
+    if (curNode->bdry[0] != NULL)
+      bdry_0 = curNode->bdry[0]->name;
+    else 
+      bdry_0 = "None";
+    if (curNode->bdry[1] != NULL)
+      bdry_1 = curNode->bdry[1]->name;
+    else 
+      bdry_1 = "None";
+
+    fprintf(stdout,"%d\t%9.5f\t%9.5f\t%s\t%s\n", 
+        node_index, xy[0], xy[1], bdry_0, bdry_1);
     node_index += 1;
   }
 
@@ -499,14 +512,20 @@ void icfMesh_printMesh(icfMesh *mesh)
     icfTri *t0 = curEdge->t[0];
     icfTri *t1 = curEdge->t[1];
 
+    char *bdry;
+    if (curEdge->bdry != NULL)
+      bdry = curEdge->bdry->name;
+    else
+      bdry = "None";
+
     if (t0 != NULL)
       i0 = t0->index;
     if (t1 != NULL)
       i1 = t1->index;
 
     curEdge->index = i;
-    fprintf(stdout,"%d\t%9d\t%9d\t%9d\t%9d\n", i, 
-        n0, n1, i0, i1);
+    fprintf(stdout,"%d\t%9d\t%9d\t%9d\t%9d\t%s\n", i, 
+        n0, n1, i0, i1, bdry);
   }
 
   /*-------------------------------------------------------

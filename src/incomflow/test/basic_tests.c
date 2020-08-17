@@ -82,18 +82,26 @@ char *test_basic_structures()
   icfEdge *e0   = icfEdge_create(mesh);
   icfEdge_setNodes(e0, n0, n1);
   icfBdry_addEdge(bdrySouth, e0);
+  icfBdry_addNode(bdrySouth, n0, 0);
+  icfBdry_addNode(bdrySouth, n1, 1);
 
   icfEdge *e1   = icfEdge_create(mesh);
   icfEdge_setNodes(e1, n1, n2);
   icfBdry_addEdge(bdryEast, e1);
+  icfBdry_addNode(bdryEast, n1, 0);
+  icfBdry_addNode(bdryEast, n2, 1);
 
   icfEdge *e2   = icfEdge_create(mesh);
   icfEdge_setNodes(e2, n2, n3);
   icfBdry_addEdge(bdryNorth, e2);
+  icfBdry_addNode(bdryNorth, n2, 0);
+  icfBdry_addNode(bdryNorth, n3, 1);
 
   icfEdge *e3   = icfEdge_create(mesh);
   icfEdge_setNodes(e3, n3, n0);
   icfBdry_addEdge(bdryWest, e3);
+  icfBdry_addNode(bdryWest, n3, 0);
+  icfBdry_addNode(bdryWest, n0, 1);
 
   icfEdge *e4   = icfEdge_create(mesh);
   icfEdge_setNodes(e4, n0, n2);

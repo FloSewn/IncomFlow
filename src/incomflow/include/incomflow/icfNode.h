@@ -31,6 +31,12 @@ typedef struct icfNode {
   -------------------------------------------------------*/
   icfListNode *stackPos;
 
+  /*-------------------------------------------------------
+  | Boundary connectivity
+  -------------------------------------------------------*/
+  icfListNode *bdryStackPos[2];
+  icfBdry     *bdry[2];
+
 } icfNode;
 
 

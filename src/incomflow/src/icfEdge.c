@@ -467,6 +467,8 @@ void icfEdge_split(icfEdge *e)
   {
     icfBdry_addEdge(e->bdry, eH0);
     icfBdry_addEdge(e->bdry, eH1);
+    icfBdry_addNode(e->bdry, n, 0);
+    icfBdry_addNode(e->bdry, n, 1);
   }
 
   return;

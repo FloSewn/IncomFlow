@@ -45,6 +45,15 @@ icfNode *icfNode_create(icfMesh *mesh, icfDouble *xy)
   -------------------------------------------------------*/
   node->stackPos = icfMesh_addNode(mesh, node);
 
+  /*-------------------------------------------------------
+  | Boundary connectivity
+  -------------------------------------------------------*/
+  node->bdryStackPos[0] = NULL;
+  node->bdryStackPos[1] = NULL;
+  node->bdry[0]         = NULL;
+  node->bdry[1]         = NULL;
+
+
   return node;
 error:
   return NULL;

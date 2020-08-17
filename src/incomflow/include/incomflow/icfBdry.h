@@ -21,6 +21,12 @@ typedef struct icfBdry {
   icfMesh *mesh;
 
   /*-------------------------------------------------------
+  | Boundary nodes
+  -------------------------------------------------------*/
+  int      nNodes;
+  icfList *nodeStack;
+
+  /*-------------------------------------------------------
   | Boundary edges
   -------------------------------------------------------*/
   int      nEdges;
@@ -62,15 +68,40 @@ icfBdry *icfBdry_create(icfMesh *mesh,
 int icfBdry_destroy(icfBdry *bdry);
 
 /**********************************************************
+* Function: icfBdry_addNode
+*----------------------------------------------------------
+* Adds a node to a bdry structure
+* @param: bdry - pointer to bdry structure 
+* @param: node - pointer to node structure
+* @param: index - 0/1 index of boundary in node's bdry
+*----------------------------------------------------------
+* @return: 
+**********************************************************/
+void icfBdry_addNode(icfBdry *bdry, 
+                     icfNode *node, 
+                     icfIndex index);
+
+/**********************************************************
 * Function: icfBdry_addEdge
 *----------------------------------------------------------
-* Adds an edge to a bdry structure
+* Adds an edge to a bdry structure and connects the
+* boundary to the edge
 * @param: bdry - pointer to bdry structure 
 * @param: edge - pointer to edge structure
 *----------------------------------------------------------
-* @return: icfNode list node on the bdry's edge stack
+* @return: 
 **********************************************************/
-icfListNode *icfBdry_addEdge(icfBdry *bdry, icfEdge *edge);
+void icfBdry_addEdge(icfBdry *bdry, icfEdge *edge);
+
+/**********************************************************
+* Function: icfBdry_remNode()
+*----------------------------------------------------------
+* Function to remove an icfNode from an icfBdry
+* Clears also the connectivity of the boundary in the node
+*----------------------------------------------------------
+* 
+**********************************************************/
+void icfBdry_remNode(icfBdry *bdry, icfNode *node);
 
 /**********************************************************
 * Function: icfBdry_remEdge()
