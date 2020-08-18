@@ -23,14 +23,15 @@ typedef struct icfBdry {
   /*-------------------------------------------------------
   | Boundary nodes
   -------------------------------------------------------*/
-  int      nNodes;
-  icfList *nodeStack;
+  int       nNodes;
+  icfList  *nodeStack;
+  icfNode **bdryNodes;
 
   /*-------------------------------------------------------
   | Boundary edges
   -------------------------------------------------------*/
-  int      nEdges;
-  icfList *edgeStack;
+  int       nEdges;
+  icfList  *edgeStack;
 
   /*-------------------------------------------------------
   | Boundary properties
@@ -42,6 +43,11 @@ typedef struct icfBdry {
   | Position in mesh's bdry stack
   -------------------------------------------------------*/
   icfListNode *stackPos;
+
+  /*-------------------------------------------------------
+  | Mesh data for edge-based CFD solver
+  -------------------------------------------------------*/
+  icfDouble (*norm)[2];    /* dualgrid face normals      */
 
 } icfBdry;
 

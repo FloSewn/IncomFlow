@@ -16,8 +16,9 @@ typedef struct icfMesh {
   /*-------------------------------------------------------
   | Mesh nodes 
   -------------------------------------------------------*/
-  int      nNodes;
-  icfList *nodeStack;
+  int       nNodes;
+  icfList  *nodeStack;
+  icfNode **nodes;
 
   /*-------------------------------------------------------
   | Mesh edges 
@@ -43,12 +44,18 @@ typedef struct icfMesh {
   int        nEdgeLeafs;
   icfEdge  **edgeLeafs;
 
-
   /*-------------------------------------------------------
   | Mesh triangle leafs 
   -------------------------------------------------------*/
   int       nTriLeafs;
   icfTri  **triLeafs;
+
+  /*-------------------------------------------------------
+  | Mesh data for edge-based CFD solver
+  -------------------------------------------------------*/
+  icfDouble (*norm)[2];    /* dualgrid face normals      */
+  icfDouble  *vol;         /* dualgrid element volumes   */
+
 
 
 } icfMesh;
@@ -154,6 +161,21 @@ void icfMesh_remBdry(icfMesh *mesh, icfBdry *bdry);
 * 
 **********************************************************/
 void icfMesh_refine(icfFlowData *flowData, icfMesh *mesh);
+
+/**********************************************************
+* Function: icfMesh_update()
+*----------------------------------------------------------
+* Function to update all mesh leafs structures and 
+* the mesh arrays.
+* The entities get their global indices here.
+* Furthermore, the mesh normals and volumes for the 
+* flow solver are calculated.
+* This is mandatory after refining the mesh or setting
+* up the mesh.
+*----------------------------------------------------------
+* 
+**********************************************************/
+void icfMesh_update(icfMesh *mesh);
 
 /**********************************************************
 * Function: icfMesh_printMesh()

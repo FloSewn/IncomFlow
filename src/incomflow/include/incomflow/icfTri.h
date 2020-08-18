@@ -68,7 +68,13 @@ typedef struct icfTri {
   icfBool   split;
   icfBool   isSplit;
   icfIndex  treeLevel;
-  icfDouble aspectRatio;
+
+  /*-------------------------------------------------------
+  | Geometric triangle properties
+  -------------------------------------------------------*/
+  icfDouble xy[2];       /*            Triangle centroid */
+  icfDouble aspectRatio; /*                 Aspect ratio */
+  icfDouble area;        /*                         Area */
 
   /*-------------------------------------------------------
   | Position of this triangle in mesh stack 

@@ -58,9 +58,13 @@ typedef struct icfEdge {
   icfIndex  index; 
   icfBool   split;
   icfBool   isSplit;
-  icfDouble len;
-  icfDouble centroid[2];
   icfIndex  treeLevel;
+
+  /*-------------------------------------------------------
+  | Geometric edge properties
+  -------------------------------------------------------*/
+  icfDouble xy[2]; /*                      Edge centroid */
+  icfDouble len;   /*                      Edge length   */
 
   /*-------------------------------------------------------
   | Position in mesh's edge stack

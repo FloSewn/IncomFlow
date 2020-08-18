@@ -34,6 +34,7 @@ def read_meshdata(mesh_file):
         nodes       = np.zeros( (n_nodes, 2) )
         edges       = []
         tris        = []
+        tri_index   = []
 
         # Get node coordinates
         #----------------------------------------------------
@@ -51,6 +52,7 @@ def read_meshdata(mesh_file):
             line = lines[i].replace('\n','').split('\t')
             tri = (int(line[1]), int(line[2]), int(line[3]))
             tris.append(tri)
+            tri_index.append(int(line[0]))
 
         # Get edge data
         #----------------------------------------------------
@@ -62,7 +64,7 @@ def read_meshdata(mesh_file):
             edge = (int(line[1]), int(line[2]))
             edges.append(edge)
 
-    return nodes, edges, tris
+    return nodes, edges, tris, tri_index
 
 
 def main():
@@ -71,8 +73,8 @@ def main():
         print("plot_boundary.py <mesh>.dat <export_path>")
         sys.exit(1)
 
-    nodes, edges, tris = read_meshdata(sys.argv[1])
-    export_path        = sys.argv[2]
+    nodes, edges, tris, tri_index = read_meshdata(sys.argv[1])
+    export_path                   = sys.argv[2]
 
     i_plts = 0
 
@@ -94,7 +96,7 @@ def main():
         for i_tri, tri in enumerate(tris[:step]):
             tri_patches.append(Polygon([nodes[tri[i]] for i in range(3)]))
             tri_centr = np.mean([nodes[tri[i]] for i in range(3)], axis=0)
-            #ax.text(tri_centr[0], tri_centr[1], i_tri, color='k')
+            #ax.text(tri_centr[0], tri_centr[1], tri_index[i_tri], color='k')
 
         tri_col = PatchCollection(tri_patches, **TRI_PATCH)
         ax.add_collection(tri_col)

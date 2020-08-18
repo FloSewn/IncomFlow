@@ -120,8 +120,8 @@ void icfEdge_setNodes(icfEdge *edge,
   /*-------------------------------------------------------
   | Compute edge centroid
   -------------------------------------------------------*/
-  edge->centroid[0] = 0.5 * (n1->xy[0] + n0->xy[0]);
-  edge->centroid[1] = 0.5 * (n1->xy[1] + n0->xy[1]);
+  edge->xy[0] = 0.5 * (n1->xy[0] + n0->xy[0]);
+  edge->xy[1] = 0.5 * (n1->xy[1] + n0->xy[1]);
 
 } /*icfEdge_setNodes() */
 
@@ -197,7 +197,7 @@ void icfEdge_split(icfEdge *e)
   /*-------------------------------------------------------
   | Create new node at edge centroid
   -------------------------------------------------------*/
-  icfNode *n = icfNode_create(mesh, e->centroid);
+  icfNode *n = icfNode_create(mesh, e->xy);
 
   /*-------------------------------------------------------
   | Create new horizontal edges 
@@ -407,6 +407,26 @@ void icfEdge_split(icfEdge *e)
     t_L->split   = FALSE;
     t_L->isSplit = TRUE;
 
+    if (t3 != NULL)
+      if (e3 == t3->e[0])
+        t3->t[2] = tL0;
+      else if (e3 == t3->e[1])
+        t3->t[0] = tL0;
+      else if (e3 == t3->e[2])
+        t3->t[1] = tL0;
+      else
+        log_err("Triangle connectivity seems to be incorrect.");
+
+    if (t2 != NULL)
+      if (e2 == t2->e[0])
+        t2->t[2] = tL1;
+      else if (e2 == t2->e[1])
+        t2->t[0] = tL1;
+      else if (e2 == t2->e[2])
+        t2->t[1] = tL1;
+      else
+        log_err("Triangle connectivity seems to be incorrect.");
+
     t_L->t_c[0]    = tL0;
     tL0->parent    = t_L;
     tL0->treeLevel = t_L->treeLevel + 1;
@@ -423,6 +443,27 @@ void icfEdge_split(icfEdge *e)
     icfTri_setTris(tR1, t1, tL1, tR0);
     t_R->split   = FALSE;
     t_R->isSplit = TRUE;
+
+    if (t0 != NULL)
+      if (e0 == t0->e[0])
+        t0->t[2] = tR0;
+      else if (e0 == t0->e[1])
+        t0->t[0] = tR0;
+      else if (e0 == t0->e[2])
+        t0->t[1] = tR0;
+      else
+        log_err("Triangle connectivity seems to be incorrect.");
+
+    if (t1 != NULL)
+      if (e1 == t1->e[0])
+        t1->t[2] = tR1;
+      else if (e1 == t1->e[1])
+        t1->t[0] = tR1;
+      else if (e1 == t1->e[2])
+        t1->t[1] = tR1;
+      else
+        log_err("Triangle connectivity seems to be incorrect.");
+
 
     t_R->t_c[0]    = tR0;
     tR0->parent    = t_R;

@@ -68,8 +68,15 @@ icfTri *icfTri_create(icfMesh *mesh)
   tri->index       = -1;
   tri->split       = FALSE;
   tri->isSplit     = FALSE;
-  tri->aspectRatio = 0.0;
   tri->treeLevel   = 0;
+
+  /*-------------------------------------------------------
+  | Geometric triangle properties
+  -------------------------------------------------------*/
+  tri->xy[0]       = 0.0;
+  tri->xy[1]       = 0.0;
+  tri->aspectRatio = 0.0;
+  tri->area        = 0.0;
 
   /*-------------------------------------------------------
   | Position of this triangle in mesh stack 
@@ -113,6 +120,20 @@ void icfTri_setNodes(icfTri  *tri,
   tri->n[0] = n0;
   tri->n[1] = n1;
   tri->n[2] = n2;
+
+  /*-------------------------------------------------------
+  | Compute triangle centroid
+  -------------------------------------------------------*/
+  tri->xy[0] = (n0->xy[0] + n1->xy[0] + n2->xy[0]) / 3.0;
+  tri->xy[1] = (n0->xy[1] + n1->xy[1] + n2->xy[1]) / 3.0;
+
+  /*-------------------------------------------------------
+  | Compute triangle area
+  -------------------------------------------------------*/
+  icfDouble a2 = (n1->xy[0]-n0->xy[0])*(n2->xy[1]-n0->xy[1])
+               - (n2->xy[0]-n0->xy[0])*(n1->xy[1]-n0->xy[1]);
+  tri->area = 0.5 * a2;
+
 } /*icfTri_setNodes() */
 
 /**********************************************************

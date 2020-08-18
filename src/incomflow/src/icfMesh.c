@@ -32,6 +32,7 @@ icfMesh *icfMesh_create(void)
   -------------------------------------------------------*/
   mesh->nNodes = 0;
   mesh->nodeStack = icfList_create();
+  mesh->nodes = (icfNode**) calloc(0, sizeof(icfNode*) );
 
   /*-------------------------------------------------------
   | Mesh edges 
@@ -63,6 +64,11 @@ icfMesh *icfMesh_create(void)
   mesh->nTriLeafs = 0;
   mesh->triLeafs = (icfTri**) calloc(0, sizeof(icfTri*));
 
+  /*-------------------------------------------------------
+  | Mesh data for edge-based CFD solver
+  -------------------------------------------------------*/
+  mesh->norm = calloc(0, 2*sizeof(icfDouble));
+  mesh->vol  = calloc(0,   sizeof(icfDouble));
 
   return mesh;
 error:
@@ -151,6 +157,9 @@ int icfMesh_destroy(icfMesh *mesh)
   -------------------------------------------------------*/
   free(mesh->edgeLeafs);
   free(mesh->triLeafs);
+  free(mesh->nodes);
+  free(mesh->norm);
+  free(mesh->vol);
 
   /*-------------------------------------------------------
   | Finally free mesh structure memory
@@ -352,8 +361,40 @@ void icfMesh_refine(icfFlowData *flowData, icfMesh *mesh)
   }
 
   /*-------------------------------------------------------
-  | Count leafs in both triangle- and edge-trees
+  | Update the mesh leafs
   -------------------------------------------------------*/
+  icfMesh_update(mesh);
+
+  return;
+error:
+  return;
+
+} /* isfMesh_refine() */
+
+/**********************************************************
+* Function: icfMesh_update()
+*----------------------------------------------------------
+* Function to update all mesh leafs structures and 
+* the mesh arrays.
+* The entities get their global indices here.
+* Furthermore, the mesh normals and volumes for the 
+* flow solver are calculated.
+* This is mandatory after refining the mesh or setting
+* up the mesh.
+*----------------------------------------------------------
+* 
+**********************************************************/
+void icfMesh_update(icfMesh *mesh)
+{
+  icfListNode *cur, *curBdry;
+
+  /*-------------------------------------------------------
+  | Count leafs in both triangle- and edge-trees
+  | This is the point, where triangles and edges
+  | get their global indices
+  -------------------------------------------------------*/
+  int iTri = 0;
+  int iEdge = 0;
   int nTriLeafs = 0;
   int nEdgeLeafs = 0;
 
@@ -361,6 +402,8 @@ void icfMesh_refine(icfFlowData *flowData, icfMesh *mesh)
        cur != NULL; cur = cur->next)
   {
     icfTri *t = (icfTri*)cur->value;
+    t->index = iTri;
+    iTri++;
 
     if (t->isSplit == FALSE)
       nTriLeafs += 1;
@@ -370,16 +413,12 @@ void icfMesh_refine(icfFlowData *flowData, icfMesh *mesh)
        cur != NULL; cur = cur->next)
   {
     icfEdge *e = (icfEdge*)cur->value;
+    e->index = iEdge;
+    iEdge++;
 
     if (e->isSplit == FALSE)
       nEdgeLeafs += 1;
   }
-
-  icfPrint("NUMBER OF EDGE LEAFS: %d",
-      nEdgeLeafs);
-  icfPrint("NUMBER OF TRIANGLE LEAFS: %d",
-      nTriLeafs);
-
 
   /*-------------------------------------------------------
   | reallocate memory for leafs
@@ -400,7 +439,7 @@ void icfMesh_refine(icfFlowData *flowData, icfMesh *mesh)
   /*-------------------------------------------------------
   | Set pointer-array to triangles
   -------------------------------------------------------*/
-  int iTri  = 0;
+  iTri  = 0;
   
   for (cur = mesh->triStack->first; 
        cur != NULL; cur = cur->next)
@@ -417,7 +456,7 @@ void icfMesh_refine(icfFlowData *flowData, icfMesh *mesh)
   /*-------------------------------------------------------
   | Set pointer-array to edges
   -------------------------------------------------------*/
-  int iEdge = 0;
+  iEdge = 0;
   for (cur = mesh->edgeStack->first; 
        cur != NULL; cur = cur->next)
   {
@@ -430,12 +469,96 @@ void icfMesh_refine(icfFlowData *flowData, icfMesh *mesh)
     }
   }
 
+  /*-------------------------------------------------------
+  | Update arrays for all mesh nodes 
+  | This is also the point, where the nodes get 
+  | their global indices
+  -------------------------------------------------------*/
+  icfNode **newNodes;
+  newNodes = (icfNode**) realloc(mesh->nodes, 
+      mesh->nNodes*sizeof(icfNode*));
+  if (newNodes != NULL)
+    mesh->nodes = newNodes;
+
+  int iNode = 0;
+  for (cur = mesh->nodeStack->first; 
+       cur != NULL; cur = cur->next)
+  {
+    icfNode *n = (icfNode*)cur->value;
+    mesh->nodes[iNode] = n;
+    n->index = iNode;
+    iNode++;
+  }
+
+  /*-------------------------------------------------------
+  | Update arrays for all boundary nodes 
+  -------------------------------------------------------*/
+  for (curBdry = mesh->bdryStack->first; 
+       curBdry != NULL; curBdry = curBdry->next)
+  {
+    icfBdry *bdry = (icfBdry*)curBdry->value;
+
+    icfNode **newBdryNodes;
+    newBdryNodes = (icfNode**) realloc(bdry->bdryNodes, 
+        bdry->nNodes*sizeof(icfNode*));
+    if (newBdryNodes != NULL)
+      bdry->bdryNodes = newBdryNodes;
+
+    iNode = 0;
+    for (cur = bdry->nodeStack->first; 
+         cur != NULL; cur = cur->next)
+    {
+      icfNode *n = (icfNode*)cur->value;
+      bdry->bdryNodes[iNode] = n;
+      iNode++;
+    }
+  }
+
+  /*-------------------------------------------------------
+  | Compute interior dual face normals
+  -------------------------------------------------------*/
+
+  /*-------------------------------------------------------
+  | Compute interior dual element volumes
+  -------------------------------------------------------*/
+
+  /*-------------------------------------------------------
+  | Compute boundary dual face normals
+  -------------------------------------------------------*/
   
   return;
 error:
   return;
 
-} /* icfMesh_refine() */
+} /* icfMesh_update() */
+
+/**********************************************************
+* Function: icfMesh_calcDualNormals()
+*----------------------------------------------------------
+* Fuction to compute the median dual normals for the mesh
+* The dual normals are associated to the mesh edges.
+*----------------------------------------------------------
+* @param mesh: pointer to mesh structure
+**********************************************************/
+void icfMesh_calcDualNormals(icfMesh *mesh) 
+{
+  int      nEdges = mesh->nEdgeLeafs;
+  icfEdge **edges = mesh->edgeLeafs;
+
+  icfIndex iEdge;
+
+  for (iEdge = 0; iEdge < nEdges; iEdge++)
+  {
+    icfEdge *edge = edges[iEdge];
+
+    const icfDouble xc = edge->xy[0];
+    const icfDouble yc = edge->xy[1];
+
+  }
+  
+
+
+} /* icfMesh_calcDualNormals() */
 
 
 /**********************************************************
@@ -449,9 +572,6 @@ void icfMesh_printMesh(icfMesh *mesh)
 {
   icfListNode *cur;
   int i;
-  int node_index = 0;
-  int edge_index = 0;
-  int tri_index  = 0;
 
   /*-------------------------------------------------------
   | Set node indices and print node coordinates
@@ -461,7 +581,7 @@ void icfMesh_printMesh(icfMesh *mesh)
        cur != NULL; cur = cur->next)
   {
     icfDouble *xy = ((icfNode*)cur->value)->xy;
-    ((icfNode*)cur->value)->index = node_index;
+    icfIndex   i  = ((icfNode*)cur->value)->index;
 
     char *bdry_0, *bdry_1;
     icfNode *curNode = (icfNode*)cur->value;
@@ -475,8 +595,7 @@ void icfMesh_printMesh(icfMesh *mesh)
       bdry_1 = "None";
 
     fprintf(stdout,"%d\t%9.5f\t%9.5f\t%s\t%s\n", 
-        node_index, xy[0], xy[1], bdry_0, bdry_1);
-    node_index += 1;
+        i, xy[0], xy[1], bdry_0, bdry_1);
   }
 
   /*-------------------------------------------------------
@@ -486,10 +605,9 @@ void icfMesh_printMesh(icfMesh *mesh)
   for (i = 0; i < mesh->nTriLeafs; i++)
   {
     icfTri *curTri = mesh->triLeafs[i];
-    curTri->index = i;
 
     fprintf(stdout,"%d\t%d\t%d\t%d\n", 
-        i, 
+        curTri->index, 
         curTri->n[0]->index,
         curTri->n[1]->index,
         curTri->n[2]->index);
@@ -553,9 +671,7 @@ void icfMesh_printMesh(icfMesh *mesh)
       i2 = t2->index;
 
     fprintf(stdout,"%d\t%9d\t%9d\t%9d\n", 
-        tri_index, i0, i1, i2);
-    
-    tri_index += 1;
+        curTri->index, i0, i1, i2);
   } 
 
 } /* tmMesh_printMesh() */
