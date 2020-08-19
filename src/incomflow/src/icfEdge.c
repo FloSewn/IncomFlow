@@ -73,6 +73,16 @@ icfEdge *icfEdge_create(icfMesh *mesh)
   -------------------------------------------------------*/
   edge->stackPos = icfMesh_addEdge(mesh, edge);
 
+  /*-------------------------------------------------------
+  | Median-dual grid metrics
+  -------------------------------------------------------*/
+  edge->intrNorm[0]    = 0.0;
+  edge->intrNorm[1]    = 0.0;
+  edge->bdryNorm[0][0] = 0.0;
+  edge->bdryNorm[0][1] = 0.0;
+  edge->bdryNorm[1][0] = 0.0;
+  edge->bdryNorm[1][1] = 0.0;
+
   return edge;
 error:
   return NULL;

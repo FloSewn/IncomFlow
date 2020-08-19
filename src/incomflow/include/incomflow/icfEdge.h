@@ -71,6 +71,15 @@ typedef struct icfEdge {
   -------------------------------------------------------*/
   icfListNode *stackPos;
 
+  /*-------------------------------------------------------
+  | Median-dual grid metrics
+  -------------------------------------------------------*/
+  /* Normals of associated median-dual faces             */
+  icfDouble intrNorm[2];   
+  /* Normals of associated boundary edges, adjacent to   */
+  /* this node --> icfDouble[2][2]                       */
+  icfDouble bdryNorm[2][2];      
+
 } icfEdge;
 
 

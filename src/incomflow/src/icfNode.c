@@ -53,6 +53,10 @@ icfNode *icfNode_create(icfMesh *mesh, icfDouble *xy)
   node->bdry[0]         = NULL;
   node->bdry[1]         = NULL;
 
+  /*-------------------------------------------------------
+  | Median-dual grid metrics
+  -------------------------------------------------------*/
+  node->vol      = 0.0;
 
   return node;
 error:

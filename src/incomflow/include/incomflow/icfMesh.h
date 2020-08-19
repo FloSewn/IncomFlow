@@ -50,14 +50,6 @@ typedef struct icfMesh {
   int       nTriLeafs;
   icfTri  **triLeafs;
 
-  /*-------------------------------------------------------
-  | Mesh data for edge-based CFD solver
-  -------------------------------------------------------*/
-  icfDouble (*norm)[2];    /* dualgrid face normals      */
-  icfDouble  *vol;         /* dualgrid element volumes   */
-
-
-
 } icfMesh;
 
 
@@ -176,6 +168,31 @@ void icfMesh_refine(icfFlowData *flowData, icfMesh *mesh);
 * 
 **********************************************************/
 void icfMesh_update(icfMesh *mesh);
+
+/**********************************************************
+* Function: icfMesh_calcDualMetrics()
+*----------------------------------------------------------
+* Fuction to compute the median dual normals for the mesh
+* The dual normals are associated to the mesh edges.
+* Edge normals point from n[0] to n[1].
+*             /\
+*           /    \
+*         /   t0   \
+*       /  _ o       \
+*     / __/   \        \
+*   /  /       \xc       \
+*  n0----------o--------->n1
+*   \  \__     /         /
+*     \   \_  /        /
+*       \    o       /
+*         \   t1   /
+*           \    /
+*             \/
+*
+*----------------------------------------------------------
+* @param mesh: pointer to mesh structure
+**********************************************************/
+void icfMesh_calcDualMetrics(icfMesh *mesh);
 
 /**********************************************************
 * Function: icfMesh_printMesh()

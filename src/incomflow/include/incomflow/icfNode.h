@@ -37,6 +37,12 @@ typedef struct icfNode {
   icfListNode *bdryStackPos[2];
   icfBdry     *bdry[2];
 
+  /*-------------------------------------------------------
+  | Median-dual grid metrics
+  -------------------------------------------------------*/
+  /* Volumes of associated median-dual elements          */
+  icfDouble vol;                    
+
 } icfNode;
 
 

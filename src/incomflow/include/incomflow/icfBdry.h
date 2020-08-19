@@ -34,6 +34,12 @@ typedef struct icfBdry {
   icfList  *edgeStack;
 
   /*-------------------------------------------------------
+  | Boundary edges leafs
+  -------------------------------------------------------*/
+  int       nEdgeLeafs;
+  icfEdge **edgeLeafs;
+
+  /*-------------------------------------------------------
   | Boundary properties
   -------------------------------------------------------*/
   icfIndex type;

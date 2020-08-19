@@ -44,6 +44,12 @@ icfBdry *icfBdry_create(icfMesh *mesh,
   bdry->edgeStack = icfList_create();
 
   /*-------------------------------------------------------
+  | Bdry edge leafs
+  -------------------------------------------------------*/
+  bdry->nEdgeLeafs = 0;
+  bdry->edgeLeafs = (icfEdge**) calloc(0, sizeof(icfEdge*));
+
+  /*-------------------------------------------------------
   | Boundary properties
   -------------------------------------------------------*/
   bdry->type = type;
@@ -53,11 +59,6 @@ icfBdry *icfBdry_create(icfMesh *mesh,
   | Position in mesh's bdry stack
   -------------------------------------------------------*/
   bdry->stackPos = icfMesh_addBdry(mesh, bdry);
-
-  /*-------------------------------------------------------
-  | Mesh data for edge-based CFD solver
-  -------------------------------------------------------*/
-  bdry->norm = calloc(0, 2*sizeof(icfDouble));
 
   return bdry;
 error:
@@ -84,9 +85,8 @@ int icfBdry_destroy(icfBdry *bdry)
   /*-------------------------------------------------------
   | Free all arrays 
   -------------------------------------------------------*/
+  free(bdry->edgeLeafs);
   free(bdry->bdryNodes);
-  free(bdry->norm);
-
 
   free(bdry);
 

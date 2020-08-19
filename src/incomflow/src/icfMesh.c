@@ -64,12 +64,6 @@ icfMesh *icfMesh_create(void)
   mesh->nTriLeafs = 0;
   mesh->triLeafs = (icfTri**) calloc(0, sizeof(icfTri*));
 
-  /*-------------------------------------------------------
-  | Mesh data for edge-based CFD solver
-  -------------------------------------------------------*/
-  mesh->norm = calloc(0, 2*sizeof(icfDouble));
-  mesh->vol  = calloc(0,   sizeof(icfDouble));
-
   return mesh;
 error:
   return NULL;
@@ -158,8 +152,6 @@ int icfMesh_destroy(icfMesh *mesh)
   free(mesh->edgeLeafs);
   free(mesh->triLeafs);
   free(mesh->nodes);
-  free(mesh->norm);
-  free(mesh->vol);
 
   /*-------------------------------------------------------
   | Finally free mesh structure memory
@@ -490,14 +482,20 @@ void icfMesh_update(icfMesh *mesh)
     iNode++;
   }
 
+
+
   /*-------------------------------------------------------
-  | Update arrays for all boundary nodes 
+  | Update arrays for all boundary nodes and boundary 
+  | edge leafs
   -------------------------------------------------------*/
   for (curBdry = mesh->bdryStack->first; 
        curBdry != NULL; curBdry = curBdry->next)
   {
     icfBdry *bdry = (icfBdry*)curBdry->value;
 
+    /*-----------------------------------------------------
+    | Boundary nodes
+    -----------------------------------------------------*/
     icfNode **newBdryNodes;
     newBdryNodes = (icfNode**) realloc(bdry->bdryNodes, 
         bdry->nNodes*sizeof(icfNode*));
@@ -512,19 +510,50 @@ void icfMesh_update(icfMesh *mesh)
       bdry->bdryNodes[iNode] = n;
       iNode++;
     }
+
+    /*-----------------------------------------------------
+    | Boundary edge leafs
+    -----------------------------------------------------*/
+    iEdge = 0;
+    nEdgeLeafs = 0;
+    for (cur = bdry->edgeStack->first; 
+         cur != NULL; cur = cur->next)
+    {
+      icfEdge *e = (icfEdge*)cur->value;
+      iEdge++;
+
+      if (e->isSplit == FALSE)
+        nEdgeLeafs += 1;
+    }
+
+    bdry->nEdgeLeafs = nEdgeLeafs;
+    newEdgeLeafs = (icfEdge**) realloc(bdry->edgeLeafs, 
+        nEdgeLeafs*sizeof(icfEdge*));
+    if (newEdgeLeafs != NULL)
+      bdry->edgeLeafs = newEdgeLeafs;
+
+
+    iEdge = 0;
+    for (cur = bdry->edgeStack->first; 
+         cur != NULL; cur = cur->next)
+    {
+      icfEdge *e = (icfEdge*)cur->value;
+
+      if (e->isSplit == FALSE)
+      {
+        bdry->edgeLeafs[iEdge] = e;
+        iEdge++;
+      }
+    }
+
   }
 
   /*-------------------------------------------------------
   | Compute interior dual face normals
+  | and element volumes
   -------------------------------------------------------*/
+  icfMesh_calcDualMetrics(mesh);
 
-  /*-------------------------------------------------------
-  | Compute interior dual element volumes
-  -------------------------------------------------------*/
-
-  /*-------------------------------------------------------
-  | Compute boundary dual face normals
-  -------------------------------------------------------*/
   
   return;
 error:
@@ -533,20 +562,42 @@ error:
 } /* icfMesh_update() */
 
 /**********************************************************
-* Function: icfMesh_calcDualNormals()
+* Function: icfMesh_calcDualMetrics()
 *----------------------------------------------------------
 * Fuction to compute the median dual normals for the mesh
 * The dual normals are associated to the mesh edges.
+* Edge normals point from n[0] to n[1].
+*             /\
+*           /    \
+*         /   t0   \
+*       /  _ o       \
+*     / __/   \        \
+*   /  /       \xc       \
+*  n0----------o--------->n1
+*   \  \__     /         /
+*     \   \_  /        /
+*       \    o       /
+*         \   t1   /
+*           \    /
+*             \/
+*
 *----------------------------------------------------------
 * @param mesh: pointer to mesh structure
 **********************************************************/
-void icfMesh_calcDualNormals(icfMesh *mesh) 
+void icfMesh_calcDualMetrics(icfMesh *mesh) 
 {
   int      nEdges = mesh->nEdgeLeafs;
   icfEdge **edges = mesh->edgeLeafs;
 
   icfIndex iEdge;
 
+  icfNode *n0, *n1;
+  icfTri  *t0, *t1;
+
+  /*-------------------------------------------------------
+  | Compute interior face normals and associated 
+  | median-dual element areas
+  -------------------------------------------------------*/
   for (iEdge = 0; iEdge < nEdges; iEdge++)
   {
     icfEdge *edge = edges[iEdge];
@@ -554,11 +605,86 @@ void icfMesh_calcDualNormals(icfMesh *mesh)
     const icfDouble xc = edge->xy[0];
     const icfDouble yc = edge->xy[1];
 
+    icfDouble dx0 = 0.0;
+    icfDouble dy0 = 0.0;
+    icfDouble dx1 = 0.0;
+    icfDouble dy1 = 0.0;
+
+    n0 = edge->n[0];
+    n1 = edge->n[1];
+
+    t0 = edge->t[0];
+    if (t0 != NULL)
+    {
+      dx0 = t0->xy[0] - xc;
+      dy0 = t0->xy[1] - yc;
+
+      icfDouble a0 = (t0->xy[0]-n0->xy[0])*(yc-n0->xy[1])
+                   - (t0->xy[1]-n0->xy[1])*(xc-n0->xy[0]);
+      icfDouble a1 = (t0->xy[1]-n1->xy[1])*(xc-n1->xy[0])
+                   - (t0->xy[0]-n1->xy[0])*(yc-n1->xy[1]);
+      n0->vol -= 0.5 * a0;
+      n1->vol -= 0.5 * a1;
+    }
+
+    t1 = edge->t[1];
+    if (t1 != NULL)
+    {
+      dx1 = xc - t1->xy[0];
+      dy1 = yc - t1->xy[1];
+
+      icfDouble a0 = (t1->xy[1]-n0->xy[1])*(xc-n0->xy[0])
+                   - (t1->xy[0]-n0->xy[0])*(yc-n0->xy[1]);
+      icfDouble a1 = (t1->xy[0]-n1->xy[0])*(yc-n1->xy[1])
+                   - (t1->xy[1]-n1->xy[1])*(xc-n1->xy[0]);
+      n0->vol -= 0.5 * a0;
+      n1->vol -= 0.5 * a1;
+    }
+
+    /* normals point from n0 to n1 */
+    const icfDouble nx =  dy0 + dy1;
+    const icfDouble ny = -dx0 - dx1;
+
+    edge->intrNorm[0] += nx;
+    edge->intrNorm[1] += ny;
+  }
+
+  /*-------------------------------------------------------
+  | Compute boundary face normals
+  | Boundary normals point outwards 
+  | Boundary nodes contian normals of both adjacent 
+  | boundary edges
+  |        
+  |   ----o----> n0 ----o----> n1 ----o----> 
+  |          |       |     |        |
+  |          |       |     |        |
+  |          V       V     V        V
+  | 
+  -------------------------------------------------------*/
+  icfListNode *curBdry;
+
+  for (curBdry = mesh->bdryStack->first; 
+       curBdry != NULL; curBdry = curBdry->next)
+  {
+    icfBdry *bdry = (icfBdry*)curBdry->value;
+
+    for (iEdge = 0; iEdge < bdry->nEdgeLeafs; iEdge++)
+    {
+      icfEdge *e = bdry->edgeLeafs[iEdge];
+
+
+      icfNode *n0 = e->n[0];
+      icfNode *n1 = e->n[1];
+
+      const icfDouble xc = edge->xy[0];
+      const icfDouble yc = edge->xy[1];
+    }
+
   }
   
 
 
-} /* icfMesh_calcDualNormals() */
+} /* icfMesh_calcDualMetrics() */
 
 
 /**********************************************************
