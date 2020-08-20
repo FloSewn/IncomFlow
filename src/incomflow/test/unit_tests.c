@@ -3,6 +3,7 @@
 #include "incomflow/dbg.h"
 
 #include "basic_tests.h"
+#include "icfIO_tests.h"
 
 /************************************************************
 * Run all unit test functions
@@ -14,7 +15,8 @@ char *all_tests()
   /**********************************************************
   * 
   **********************************************************/
-  mu_run_test(test_basic_structures);
+  //mu_run_test(test_basic_structures);
+  mu_run_test(test_icfIO_readerFunctions);
 
 
   return NULL;

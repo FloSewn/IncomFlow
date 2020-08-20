@@ -8,7 +8,9 @@ set( INCOMFLOW_SRC    ${INCOMFLOW_DIR}/src     )
 
 # Define source files
 set( INCOMFLOW_MAIN
+  ${INCOMFLOW_SRC}/bstrlib.c
   ${INCOMFLOW_SRC}/icfList.c
+  ${INCOMFLOW_SRC}/icfIO.c
   ${INCOMFLOW_SRC}/icfNode.c
   ${INCOMFLOW_SRC}/icfEdge.c
   ${INCOMFLOW_SRC}/icfTri.c
@@ -68,6 +70,7 @@ set( TESTEXE_INCOMFLOW incomflow_test        )
 set( TESTDIR_INCOMFLOW ${INCOMFLOW_DIR}/test )
 
 add_executable( ${TESTEXE_INCOMFLOW}
+  ${TESTDIR_INCOMFLOW}/icfIO_tests.c
   ${TESTDIR_INCOMFLOW}/basic_tests.c
   ${TESTDIR_INCOMFLOW}/unit_tests.c
 )

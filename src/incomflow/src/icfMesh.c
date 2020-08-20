@@ -570,13 +570,13 @@ error:
 *             /\
 *           /    \
 *         /   t0   \
-*       /  _ o       \
-*     / __/   \        \
-*   /  /       \xc       \
+*       /  ___/o     \
+*     / __/    |       \
+*   /  /       |xc       \
 *  n0----------o--------->n1
-*   \  \__     /         /
-*     \   \_  /        /
-*       \    o       /
+*   \  \__     |         /
+*     \   \__  |       /
+*       \     \o     /
 *         \   t1   /
 *           \    /
 *             \/
@@ -672,17 +672,34 @@ void icfMesh_calcDualMetrics(icfMesh *mesh)
     {
       icfEdge *e = bdry->edgeLeafs[iEdge];
 
+      if (e->bdryNorm == NULL)
+        e->bdryNorm = calloc(2, 2*sizeof(icfDouble));
 
       icfNode *n0 = e->n[0];
       icfNode *n1 = e->n[1];
 
-      const icfDouble xc = edge->xy[0];
-      const icfDouble yc = edge->xy[1];
+      const icfDouble xc = e->xy[0];
+      const icfDouble yc = e->xy[1];
+
+      const icfDouble x0 = n0->xy[0];
+      const icfDouble y0 = n0->xy[1];
+
+      const icfDouble x1 = n1->xy[0];
+      const icfDouble y1 = n1->xy[1];
+
+      const icfDouble n0x =   yc - y0;
+      const icfDouble n0y = -(xc - x0);
+      const icfDouble n1x =   y1 - yc;
+      const icfDouble n1y = -(x1 - xc);
+
+      e->bdryNorm[0][0] = n0x;
+      e->bdryNorm[0][1] = n0y;
+
+      e->bdryNorm[1][0] = n1x;
+      e->bdryNorm[1][1] = n1y;
+
     }
-
   }
-  
-
 
 } /* icfMesh_calcDualMetrics() */
 

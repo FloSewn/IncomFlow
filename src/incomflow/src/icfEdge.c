@@ -78,10 +78,7 @@ icfEdge *icfEdge_create(icfMesh *mesh)
   -------------------------------------------------------*/
   edge->intrNorm[0]    = 0.0;
   edge->intrNorm[1]    = 0.0;
-  edge->bdryNorm[0][0] = 0.0;
-  edge->bdryNorm[0][1] = 0.0;
-  edge->bdryNorm[1][0] = 0.0;
-  edge->bdryNorm[1][1] = 0.0;
+  edge->bdryNorm       = NULL;
 
   return edge;
 error:
@@ -99,6 +96,7 @@ error:
 **********************************************************/
 int icfEdge_destroy(icfEdge *edge)
 {
+  free(edge->bdryNorm);
   free(edge);
   return 0;
 } /* icfEdge_destroy() */

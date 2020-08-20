@@ -131,7 +131,7 @@ char *test_basic_structures()
   | Refine the mesh
   ----------------------------------------------------------*/
   int i = 0;
-  for (i = 0; i < 1; i++)
+  for (i = 0; i < 2; i++)
   {
     icfPrint("------- ITERATION %d --------", i);
     icfMesh_refine(flowData, mesh);
