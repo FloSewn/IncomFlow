@@ -55,10 +55,10 @@ char *test_basic_structures()
   /*----------------------------------------------------------
   | Define boundaries
   ----------------------------------------------------------*/
-  icfBdry *bdrySouth = icfBdry_create(mesh, 0, "SOUTH");
-  icfBdry *bdryEast  = icfBdry_create(mesh, 0, "EAST");
-  icfBdry *bdryNorth = icfBdry_create(mesh, 0, "NORTH");
-  icfBdry *bdryWest  = icfBdry_create(mesh, 0, "WEST");
+  icfBdry *bdrySouth = icfBdry_create(mesh, 0, 1, "SOUTH");
+  icfBdry *bdryEast  = icfBdry_create(mesh, 0, 2, "EAST");
+  icfBdry *bdryNorth = icfBdry_create(mesh, 0, 3, "NORTH");
+  icfBdry *bdryWest  = icfBdry_create(mesh, 0, 4, "WEST");
 
   /*----------------------------------------------------------
   | Create mesh nodes

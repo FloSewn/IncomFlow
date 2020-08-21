@@ -125,13 +125,29 @@ void icfIO_readMeshTriangles(struct bstrList *txtlist,
                              int             *nTris_);
 
 /**********************************************************
+* Function: icfIO_readMeshNeighbors
+*----------------------------------------------------------
+* Function to read the mesh triangle neighbor connectivity
+* from a mesh file and writes them into an array of ints
+*----------------------------------------------------------
+* @param:  txtlist  - text file
+* @param:  idxTriNbrs_ - array to write tri-neighbor indices 
+* @param:  nNbrs_   - integer to write number of triangles
+**********************************************************/
+void icfIO_readMeshTriNbrs(struct bstrList *txtlist,
+                           icfIndex      (**idxTriNbrs_)[3], 
+                           int             *nTris_);
+
+/**********************************************************
 * Function: icfIO_readMesh
 *----------------------------------------------------------
 * Function to read a mesh file an create a mesh structure
 * from it
 *----------------------------------------------------------
+* @param : meshFile - string with path to a mesh file
+* @param : mesh - pointer to mesh structure
 * @return: pointer to new mesh structure
 **********************************************************/
-icfMesh *icfIO_readMesh(const char *meshFile);
+void icfIO_readMesh(const char *meshFile, icfMesh *mesh);
 
 #endif

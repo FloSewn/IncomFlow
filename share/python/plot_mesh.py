@@ -88,8 +88,8 @@ def main():
         #        ax.plot(nodes[e,0], nodes[e,1], c='k',
         #                lw=2.0, ls='-',marker='o')
 
-        for i, n in enumerate(nodes):
-            ax.text(n[0],n[1],i, color='b')
+        #for i, n in enumerate(nodes):
+        #    ax.text(n[0],n[1],i, color='b')
 
 
         tri_patches = []

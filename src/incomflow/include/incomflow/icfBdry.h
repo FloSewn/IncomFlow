@@ -44,6 +44,7 @@ typedef struct icfBdry {
   -------------------------------------------------------*/
   icfIndex type;
   char    *name;
+  icfIndex marker;
 
   /*-------------------------------------------------------
   | Position in mesh's bdry stack
@@ -62,6 +63,7 @@ typedef struct icfBdry {
 **********************************************************/
 icfBdry *icfBdry_create(icfMesh *mesh, 
                         icfIndex type, 
+                        icfIndex marker,
                         char    *name);
 
 /**********************************************************

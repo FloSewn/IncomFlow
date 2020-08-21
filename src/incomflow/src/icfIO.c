@@ -499,14 +499,14 @@ error:
 
 
 /**********************************************************
-* Function: icfIO_readMeshNodes
+* Function: icfIO_readMeshTriangles
 *----------------------------------------------------------
 * Function to read the mesh nodes from a mesh file
-* and writes them into an array of doubles
+* and writes them into an array of ints
 *----------------------------------------------------------
 * @param:  txtlist  - text file
-* @param:  xyNodes_ - array to write node coordinates
-* @param:  nNodes_  - integer to write number of nodes
+* @param:  idxTris_ - array to write triangles node indices
+* @param:  nTris_   - integer to write number of triangles
 **********************************************************/
 void icfIO_readMeshTriangles(struct bstrList *txtlist,
                              icfIndex      (**idxTris_)[3], 
@@ -574,21 +574,100 @@ error:
 } /* icfIO_readMeshTriangles() */
 
 /**********************************************************
+* Function: icfIO_readMeshNeighbors
+*----------------------------------------------------------
+* Function to read the mesh triangle neighbor connectivity
+* from a mesh file and writes them into an array of ints
+*----------------------------------------------------------
+* @param:  txtlist  - text file
+* @param:  idxTriNbrs_ - array to write tri-neighbor indices 
+* @param:  nNbrs_   - integer to write number of triangles
+**********************************************************/
+void icfIO_readMeshTriNbrs(struct bstrList *txtlist,
+                           icfIndex      (**idxTriNbrs_)[3], 
+                           int             *nTris_)
+{
+  icfIndex (*idxTriNbrs)[3];
+  int nTris = 0;
+
+  int i, iMax, nValues, triID;
+
+  bstring line;
+  bstring *valPtr;
+  struct bstrList *values;
+
+  /*----------------------------------------------------------
+  | Get total number of triangles 
+  ----------------------------------------------------------*/
+  icfIO_extractParam(txtlist, "NEIGHBORS", 0, &nTris);
+  check(nTris > 0, "No triangles defined in mesh file.");
+
+  /*----------------------------------------------------------
+  | Get line index where we start to gather tris
+  ----------------------------------------------------------*/
+  bstring *flPtr  = txtlist->entry;
+  bstring markStr = bfromcstr( "NEIGHBORS" );
+
+  for (i = 0; i < txtlist->qty; i++)
+    if ( binstr(flPtr[i], 0, markStr) != BSTR_ERR )
+      break;
+
+  iMax = i + nTris + 1;
+
+  idxTriNbrs = calloc(nTris, 3*sizeof(icfIndex));
+
+  for (i = i+1; i < iMax; i++)
+  {
+    line    = flPtr[i];
+    values  = bsplit(line, '\t');
+    nValues = values->qty;
+    valPtr  = values->entry;
+
+    check (nValues == 4, 
+        "Wrong definition for triangles.");
+
+    triID = atoi(valPtr[0]->data);
+
+    idxTriNbrs[triID][0] = atof(valPtr[1]->data);
+    idxTriNbrs[triID][1] = atof(valPtr[2]->data);
+    idxTriNbrs[triID][2] = atof(valPtr[3]->data);
+
+    bstrListDestroy( values );
+
+  }
+
+  bdestroy( markStr );
+
+  *idxTriNbrs_ = idxTriNbrs;
+  *nTris_   = nTris;
+
+  return;
+
+error:
+  return;
+
+} /* icfIO_readMeshNeighbors() */
+
+/**********************************************************
 * Function: icfIO_readMesh
 *----------------------------------------------------------
 * Function to read a mesh file an create a mesh structure
 * from it
 *----------------------------------------------------------
+* @param : meshFile - string with path to a mesh file
+* @param : mesh - pointer to mesh structure
 * @return: pointer to new mesh structure
 **********************************************************/
-icfMesh *icfIO_readMesh(const char *meshFile)
+void icfIO_readMesh(const char *meshFile, icfMesh *mesh)
 {
   int nNodes;
   int nTris;
+  int nEdges;
+  int i,j;
 
   icfDouble (*xyNodes)[2];
   icfIndex  (*idxTris)[3];
-
+  icfIndex  (*idxTriNbrs)[3];
 
   /*----------------------------------------------------------
   | Set up file reader
@@ -600,8 +679,153 @@ icfMesh *icfIO_readMesh(const char *meshFile)
   ----------------------------------------------------------*/
   icfIO_readMeshNodes(file->txtlist, &xyNodes, &nNodes);
 
+  /*----------------------------------------------------------
+  | read triangle connectivity
+  ----------------------------------------------------------*/
   icfIO_readMeshTriangles(file->txtlist, &idxTris, &nTris);
 
-  return NULL;
+  /*----------------------------------------------------------
+  | read triangle neighborhood connectivity
+  ----------------------------------------------------------*/
+  icfIO_readMeshTriNbrs(file->txtlist, &idxTriNbrs, &nTris);
+
+  /*----------------------------------------------------------
+  | Create mesh nodes
+  ----------------------------------------------------------*/
+  icfNode **n = calloc(nNodes, sizeof(icfNode*));
+
+  for (i = 0; i < nNodes; i++)
+    n[i] = icfNode_create(mesh, xyNodes[i]);
+
+  /*----------------------------------------------------------
+  | Create mesh triangles
+  ----------------------------------------------------------*/
+  icfTri **t = calloc(nTris, sizeof(icfTri*));
+
+  for (i = 0; i < nTris; i++)
+  {
+    t[i] = icfTri_create(mesh);
+    icfTri_setNodes(t[i], n[idxTris[i][0]], 
+                    n[idxTris[i][1]], n[idxTris[i][2]]);
+  }
+
+  /*----------------------------------------------------------
+  | Create mesh edges
+  | Determine number of edges from Euler's formula:
+  | >   e = n + t - 1
+  | Source:
+  | https://en.wikipedia.org/wiki/Planar_graph#Euler.27s_formula)
+  |
+  |          n2 _____
+  |          / \     /
+  |      t1 / t \ t0/
+  |        /_____\ /
+  |      n0  t2   n1
+  ----------------------------------------------------------*/
+  nEdges = nNodes + nTris - 1;
+  icfEdge **e = calloc(nEdges, sizeof(icfEdge*));
+
+  icfListNode *cur;
+  int iEdge = 0;
+
+  for (i = 0; i < nTris; i++)
+  {
+
+    for (j = 0; j < 3; j++)
+    {
+      icfBdry *bdry = NULL;
+      int triNbr    = idxTriNbrs[i][j];
+
+      /*------------------------------------------------------
+      | Create boundary edge (negative neighbor indices)
+      ------------------------------------------------------*/
+      if (triNbr < 0)
+      {
+        int marker = -triNbr;
+
+        int iBdry = 0;
+        for (cur = mesh->bdryStack->first;
+             cur != NULL; cur = cur->next)
+        {
+          if (((icfBdry*)cur->value)->marker == marker)
+          {
+            bdry = (icfBdry*)cur->value;
+            break;
+          }
+          iBdry++;
+        }
+        check(bdry != NULL, "Found undefined boundary marker %d in mesh.", marker);
+
+        int n0     = idxTris[i][(j+1)%3];
+        int n1     = idxTris[i][(j+2)%3];
+
+        e[iEdge] = icfEdge_create(mesh);
+        icfEdge_setNodes(e[iEdge], n[n0], n[n1]);
+        icfEdge_setTris(e[iEdge], t[i], NULL);
+
+        icfBdry_addEdge(bdry, e[iEdge]);
+        icfBdry_addNode(bdry, n[n0], 0);
+        icfBdry_addNode(bdry, n[n1], 1);
+
+        iEdge++;
+
+        t[i]->t[j] = NULL;
+      }
+      /*------------------------------------------------------
+      | Create interior edge (only once)
+      ------------------------------------------------------*/
+      else if (triNbr > i)
+      {
+        int n0 = idxTris[i][(j+1)%3];
+        int n1 = idxTris[i][(j+2)%3];
+
+        e[iEdge] = icfEdge_create(mesh);
+
+        icfEdge_setNodes(e[iEdge], n[n0], n[n1]);
+        icfEdge_setTris(e[iEdge], t[i], t[triNbr]);
+
+        t[i]->e[(j+1)%3] = e[iEdge];
+
+        if (n[n0] == t[triNbr]->n[0])
+          t[triNbr]->e[2] = e[iEdge];
+        else if (n[n0] == t[triNbr]->n[1])
+          t[triNbr]->e[0] = e[iEdge];
+        else if (n[n0] == t[triNbr]->n[2])
+          t[triNbr]->e[1] = e[iEdge];
+        else
+          log_err("Wrong triangle connectivity in mesh.");
+
+        iEdge++;
+
+        t[i]->t[j] = t[triNbr];
+      }
+      else if (triNbr < i)
+      {
+        t[i]->t[j] = t[triNbr];
+      }
+    }
+  }
+
+
+  /*----------------------------------------------------------
+  | Free arrays
+  ----------------------------------------------------------*/
+  free(xyNodes);
+  free(idxTris);
+  free(idxTriNbrs);
+  free(n);
+  free(t);
+  free(e);
+
+  return;
+error:
+  free(xyNodes);
+  free(idxTris);
+  free(idxTriNbrs);
+  free(n);
+  free(t);
+  free(e);
+
+  return;
 
 } /* icfIO_readMesh() */

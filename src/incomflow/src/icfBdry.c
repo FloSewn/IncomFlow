@@ -24,6 +24,7 @@
 **********************************************************/
 icfBdry *icfBdry_create(icfMesh *mesh, 
                         icfIndex type, 
+                        icfIndex marker,
                         char    *name)
 {
 
@@ -52,8 +53,9 @@ icfBdry *icfBdry_create(icfMesh *mesh,
   /*-------------------------------------------------------
   | Boundary properties
   -------------------------------------------------------*/
-  bdry->type = type;
-  bdry->name = name;
+  bdry->type   = type;
+  bdry->name   = name;
+  bdry->marker = marker;
 
   /*-------------------------------------------------------
   | Position in mesh's bdry stack
