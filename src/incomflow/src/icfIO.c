@@ -712,7 +712,13 @@ void icfIO_readMesh(const char *meshFile, icfMesh *mesh)
   /*----------------------------------------------------------
   | Create mesh edges
   | Determine number of edges from Euler's formula:
-  | >   e = n + t - 1
+  | >   e = n + t - 1 + b
+  | where f is the number of interior boundaries in the mesh.
+  | Since the edge array is only used for initialization, 
+  | we simply set b to the number of boundaries. Therefore,
+  | e will be a bit longer than nescessary.
+  | 
+  | 
   | Source:
   | https://en.wikipedia.org/wiki/Planar_graph#Euler.27s_formula)
   |
@@ -722,7 +728,7 @@ void icfIO_readMesh(const char *meshFile, icfMesh *mesh)
   |        /_____\ /
   |      n0  t2   n1
   ----------------------------------------------------------*/
-  nEdges = nNodes + nTris - 1;
+  nEdges = nNodes + nTris - 1 + mesh->nBdrys;
   icfEdge **e = calloc(nEdges, sizeof(icfEdge*));
 
   icfListNode *cur;
@@ -767,9 +773,11 @@ void icfIO_readMesh(const char *meshFile, icfMesh *mesh)
         icfBdry_addNode(bdry, n[n0], 0);
         icfBdry_addNode(bdry, n[n1], 1);
 
+        t[i]->t[j] = NULL;
+        t[i]->e[(j+1)%3] = e[iEdge];
+
         iEdge++;
 
-        t[i]->t[j] = NULL;
       }
       /*------------------------------------------------------
       | Create interior edge (only once)
@@ -805,6 +813,11 @@ void icfIO_readMesh(const char *meshFile, icfMesh *mesh)
       }
     }
   }
+
+  /*----------------------------------------------------------
+  | free reader
+  ----------------------------------------------------------*/
+  icfIO_destroyReader(file);
 
 
   /*----------------------------------------------------------

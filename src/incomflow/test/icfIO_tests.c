@@ -9,7 +9,7 @@
 #include "incomflow/icfEdge.h"
 #include "icfIO_tests.h"
 
-const char *testfile = "/datadisk/Code/C-Code/incomFlow/share/files/mesh.dat";
+const char *testfile = "/datadisk/Code/C-Code/incomFlow/share/files/example_mesh.dat";
 
 /*************************************************************
 * Unit test function to handle creation and 
@@ -50,7 +50,6 @@ char *test_icfIO_readerFunctions()
 static inline icfBool refineFun(icfFlowData *flowData, 
                                 icfTri      *tri)
 {
-  /*
   icfDouble xc = 0.0;
   icfDouble yc = 0.0;
 
@@ -65,9 +64,9 @@ static inline icfBool refineFun(icfFlowData *flowData,
   yc /= 3.0;
 
 
-  if (fabs(xc - 0.75) < 0.2)
+  //if (fabs(xc - 0.75) < 0.2)
+  if (fabs(xc - 4.75) < 1.5 && fabs(yc - 4.25) < 1.5)
     return TRUE;
-  */
 
   return FALSE;
 }
@@ -93,15 +92,14 @@ char *test_icfIO_readMesh()
   icfBdry *bdrySouth = icfBdry_create(mesh, 0, 1, "SOUTH");
   icfBdry *bdryEast  = icfBdry_create(mesh, 0, 2, "EAST");
   icfBdry *bdryNorth = icfBdry_create(mesh, 0, 3, "NORTH");
-  icfBdry *bdryWest  = icfBdry_create(mesh, 0, 4, "WEST");
+  //icfBdry *bdryWest  = icfBdry_create(mesh, 0, 4, "WEST");
 
   /*----------------------------------------------------------
   | Read the mesh from a file
   ----------------------------------------------------------*/
   icfIO_readMesh(testfile, mesh);
   icfMesh_refine(flowData, mesh);
-  //icfMesh_refine(flowData, mesh);
-  //icfMesh_refine(flowData, mesh);
+  icfMesh_refine(flowData, mesh);
 
   /*----------------------------------------------------------
   | Print the mesh

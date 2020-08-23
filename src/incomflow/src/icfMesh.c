@@ -802,19 +802,34 @@ void icfMesh_printMesh(icfMesh *mesh)
     icfTri *t1 = curTri->t[1];
     icfTri *t2 = curTri->t[2];
 
-    icfIndex i0 = -1;
-    icfIndex i1 = -1;
-    icfIndex i2 = -1;
+    icfEdge *e0 = curTri->e[0];
+    icfEdge *e1 = curTri->e[1];
+    icfEdge *e2 = curTri->e[2];
+
+    icfIndex it0 = -1;
+    icfIndex it1 = -1;
+    icfIndex it2 = -1;
+
+    icfIndex ie0 = -1;
+    icfIndex ie1 = -1;
+    icfIndex ie2 = -1;
 
     if (t0 != NULL)
-      i0 = t0->index;
+      it0 = t0->index;
     if (t1 != NULL)
-      i1 = t1->index;
+      it1 = t1->index;
     if (t2 != NULL)
-      i2 = t2->index;
+      it2 = t2->index;
 
-    fprintf(stdout,"%d\t%9d\t%9d\t%9d\n", 
-        curTri->index, i0, i1, i2);
+    if (e0 != NULL)
+      ie0 = e0->index;
+    if (e1 != NULL)
+      ie1 = e1->index;
+    if (e2 != NULL)
+      ie2 = e2->index;
+
+    fprintf(stdout,"%d\t%9d\t%9d\t%9d\t%9d\t%9d\t%9d\n", 
+        curTri->index, it0, it1, it2, ie0, ie1, ie2);
   } 
 
 } /* tmMesh_printMesh() */

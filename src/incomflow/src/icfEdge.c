@@ -275,6 +275,7 @@ void icfEdge_split(icfEdge *e)
     | Determine triangle neighbors
     | and connect new sub-triangles to edges
     -----------------------------------------------------*/
+    icfPrint("t_L: (%d,%d,%d)", t_L->n[0]->index, t_L->n[1]->index, t_L->n[2]->index);
     if ( e3->t[0] == t_L )
     { 
       t3 = e3->t[1];
