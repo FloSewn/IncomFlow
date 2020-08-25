@@ -21,9 +21,10 @@ typedef struct icfFlowData {
   icfMesh *mesh;
 
   /*-------------------------------------------------------
-  | Refinement functions 
+  | Refinement / Coarsening functions 
   -------------------------------------------------------*/
   icfRefineFun refineFun;
+  icfRefineFun coarseFun;
 
 } icfFlowData;
 

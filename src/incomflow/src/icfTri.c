@@ -67,7 +67,9 @@ icfTri *icfTri_create(icfMesh *mesh)
   -------------------------------------------------------*/
   tri->index       = -1;
   tri->split       = FALSE;
+  tri->merge       = FALSE;
   tri->isSplit     = FALSE;
+  tri->isLeaf      = FALSE;
   tri->treeLevel   = 0;
 
   /*-------------------------------------------------------
@@ -255,3 +257,56 @@ error:
   return;
 
 } /* icfTri_markToSplit() */
+
+
+/**********************************************************
+* Function: icfTri_markToMerge
+*----------------------------------------------------------
+* Marks a triangle and its associated refinement tree 
+* siblings for merge
+* @param: tri - triangle structure 
+*----------------------------------------------------------
+* 
+**********************************************************/
+void icfTri_markToMerge(icfTri *tri)
+{
+  /*-------------------------------------------------------
+  | Find siblings in refinement tree
+  -------------------------------------------------------*/
+  icfNode *n = tri->n_c;
+  check(n != NULL,
+      "Can not merge unrefined triangle");
+
+  icfEdge *eH0 = n->e_c[0];
+  icfEdge *eV0 = n->e_c[1];
+  icfEdge *eH1 = n->e_c[2];
+  icfEdge *eV1 = n->e_c[3];
+
+  icfTri  *tR0 = n->t_c[0];
+  icfTri  *tR1 = n->t_c[1];
+  icfTri  *tL1 = n->t_c[2];
+  icfTri  *tL0 = n->t_c[3];
+
+  if (eH0 != NULL)
+    eH0->merge = TRUE;
+  if (eV0 != NULL)
+    eV0->merge = TRUE;
+  if (eH1 != NULL)
+    eH1->merge = TRUE;
+  if (eV1 != NULL)
+    eV1->merge = TRUE;
+
+  if (tR0 != NULL)
+    tR0->merge = TRUE;
+  if (tR1 != NULL)
+    tR1->merge = TRUE;
+  if (tL1 != NULL)
+    tL1->merge = TRUE;
+  if (tL0 != NULL)
+    tL0->merge = TRUE;
+
+  return;
+error:
+  return;
+
+} /*  icfTri_markToMerge() */

@@ -65,7 +65,9 @@ icfEdge *icfEdge_create(icfMesh *mesh)
   -------------------------------------------------------*/
   edge->index     = -1;
   edge->split     = FALSE;
+  edge->merge     = FALSE;
   edge->isSplit   = FALSE;
+  edge->isLeaf    = FALSE;
   edge->treeLevel = 0;
 
   /*-------------------------------------------------------
@@ -212,9 +214,11 @@ void icfEdge_split(icfEdge *e)
   -------------------------------------------------------*/
   icfEdge *eH0 = icfEdge_create(mesh);
   icfEdge_setNodes(eH0, e->n[0], n);
+  eH0->n_c = n;
 
   icfEdge *eH1 = icfEdge_create(mesh);
   icfEdge_setNodes(eH1, n, e->n[1]);
+  eH1->n_c = n;
 
   icfTri  *tL0, *tL1, *tR0, *tR1;
   icfNode *n0,  *n1,  *n2,  *n3;
@@ -416,6 +420,10 @@ void icfEdge_split(icfEdge *e)
     t_L->split   = FALSE;
     t_L->isSplit = TRUE;
 
+    tL0->n_c     = n;
+    tL1->n_c     = n;
+    eV1->n_c     = n;
+
     if (t3 != NULL)
       if (e3 == t3->e[0])
         t3->t[2] = tL0;
@@ -452,6 +460,10 @@ void icfEdge_split(icfEdge *e)
     icfTri_setTris(tR1, t1, tL1, tR0);
     t_R->split   = FALSE;
     t_R->isSplit = TRUE;
+
+    tR0->n_c     = n;
+    tR1->n_c     = n;
+    eV0->n_c     = n;
 
     if (t0 != NULL)
       if (e0 == t0->e[0])
@@ -509,6 +521,20 @@ void icfEdge_split(icfEdge *e)
     eV1->parent    = e;
     eV1->treeLevel = e->treeLevel + 1;
   }
+
+  /*-------------------------------------------------------
+  | Set connectivity to new node n at edge centroid
+  -------------------------------------------------------*/
+  n->e_c[0] = eH0;
+  n->e_c[1] = eV0;
+  n->e_c[2] = eH1;
+  n->e_c[3] = eV1;
+
+  n->t_c[0] = tR0;
+  n->t_c[1] = tR1;
+  n->t_c[2] = tL1;
+  n->t_c[3] = tL0;
+
 
   /*-------------------------------------------------------
   | Set boundary properties for children

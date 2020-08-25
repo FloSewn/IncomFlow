@@ -36,6 +36,7 @@ icfFlowData *icfFlowData_create(void)
   | Refinement functions 
   -------------------------------------------------------*/
   flowData->refineFun = NULL;
+  flowData->coarseFun = NULL;
 
   return flowData;
 error:

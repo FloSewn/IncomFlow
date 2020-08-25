@@ -34,6 +34,11 @@ typedef struct icfEdge {
   | Children
   -------------------------------------------------------*/
   icfEdge *e_c[4];
+
+  /*-------------------------------------------------------
+  | Node that connects this edge to all its
+  | trianlge/edge siblings in the refinement tree 
+  -------------------------------------------------------*/
   icfNode *n_c;
 
   /*-------------------------------------------------------
@@ -57,7 +62,9 @@ typedef struct icfEdge {
   -------------------------------------------------------*/
   icfIndex  index; 
   icfBool   split;
+  icfBool   merge;
   icfBool   isSplit;
+  icfBool   isLeaf;
   icfIndex  treeLevel;
 
   /*-------------------------------------------------------

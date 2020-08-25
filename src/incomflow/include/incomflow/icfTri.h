@@ -43,6 +43,11 @@ typedef struct icfTri {
   | Children
   -------------------------------------------------------*/
   icfTri  *t_c[2];
+
+  /*-------------------------------------------------------
+  | Node that connects this triangle to all its
+  | trianlge/edge siblings in the refinement tree 
+  -------------------------------------------------------*/
   icfNode *n_c;
 
   /*-------------------------------------------------------
@@ -66,8 +71,10 @@ typedef struct icfTri {
   -------------------------------------------------------*/
   icfIndex  index; 
   icfBool   split;
+  icfBool   merge;
   icfBool   isSplit;
   icfIndex  treeLevel;
+  icfBool   isLeaf;
 
   /*-------------------------------------------------------
   | Geometric triangle properties
@@ -156,5 +163,16 @@ void icfTri_setTris(icfTri *tri,
 * 
 **********************************************************/
 void icfTri_markToSplit(icfTri *tri);
+
+/**********************************************************
+* Function: icfTri_markToMerge
+*----------------------------------------------------------
+* Marks a triangle and its associated refinement tree 
+* siblings for merge
+* @param: tri - triangle structure 
+*----------------------------------------------------------
+* 
+**********************************************************/
+void icfTri_markToMerge(icfTri *tri);
 
 #endif

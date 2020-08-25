@@ -30,6 +30,21 @@ icfNode *icfNode_create(icfMesh *mesh, icfDouble *xy)
   node->mesh   = mesh;
 
   /*-------------------------------------------------------
+  | If this node is a refinement node, it contains the
+  | connectivity to all neighboring triangles / edges
+  | in the respective refinement tree level
+  -------------------------------------------------------*/
+  node->e_c[0] = NULL;
+  node->e_c[1] = NULL;
+  node->e_c[2] = NULL;
+  node->e_c[3] = NULL;
+
+  node->t_c[0] = NULL;
+  node->t_c[1] = NULL;
+  node->t_c[2] = NULL;
+  node->t_c[3] = NULL;
+
+  /*-------------------------------------------------------
   | Node coordinates 
   -------------------------------------------------------*/
   node->xy[0]  = xy[0];

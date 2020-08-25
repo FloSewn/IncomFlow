@@ -21,6 +21,34 @@ typedef struct icfNode {
   icfMesh *mesh;
 
   /*-------------------------------------------------------
+  | If this node is a refinement node, it contains the
+  | connectivity to all neighboring triangles / edges
+  | in the respective refinement tree level
+  |
+  |             n3
+  |            /^\
+  |          /  |  \
+  | t3  e3 /   eV1   \ e2  t2
+  |      /  tL0 | tL1  \
+  |    /        |        \
+  |  /          |          \
+  | n0---eH0--->n---eH1--->n2
+  |  \          ^          /
+  |    \        |        /
+  |      \  tR0 | tR1  /
+  | t0  e0 \    |    / e1  t1
+  |          \ eV0 /
+  |            \|/
+  |             n1
+  |
+  | e_c = [eH0, eV0, eH1, eV1]
+  | t_c = [tR0, tR1, tL1, tL0]
+  |
+  -------------------------------------------------------*/
+  icfEdge *e_c[4];
+  icfTri  *t_c[4];
+
+  /*-------------------------------------------------------
   | Node coordinates 
   -------------------------------------------------------*/
   icfDouble xy[2];

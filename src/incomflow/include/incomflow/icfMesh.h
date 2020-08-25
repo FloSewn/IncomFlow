@@ -155,6 +155,15 @@ void icfMesh_remBdry(icfMesh *mesh, icfBdry *bdry);
 void icfMesh_refine(icfFlowData *flowData, icfMesh *mesh);
 
 /**********************************************************
+* Function: icfMesh_coarsen()
+*----------------------------------------------------------
+* Function to coarsen an icfMesh mesh structure
+*----------------------------------------------------------
+* 
+**********************************************************/
+void icfMesh_coarsen(icfFlowData *flowData, icfMesh *mesh);
+
+/**********************************************************
 * Function: icfMesh_update()
 *----------------------------------------------------------
 * Function to update all mesh leafs structures and 

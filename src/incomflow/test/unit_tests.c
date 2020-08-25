@@ -15,9 +15,9 @@ char *all_tests()
   /**********************************************************
   * 
   **********************************************************/
-  //mu_run_test(test_basic_structures);
-  mu_run_test(test_icfIO_readerFunctions);
-  mu_run_test(test_icfIO_readMesh);
+  mu_run_test(test_basic_structures);
+  //mu_run_test(test_icfIO_readerFunctions);
+  //mu_run_test(test_icfIO_readMesh);
 
 
   return NULL;

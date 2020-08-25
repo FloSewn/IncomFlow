@@ -364,6 +364,67 @@ error:
 } /* isfMesh_refine() */
 
 /**********************************************************
+* Function: icfMesh_coarsen()
+*----------------------------------------------------------
+* Function to coarsen an icfMesh mesh structure
+*----------------------------------------------------------
+* 
+**********************************************************/
+void icfMesh_coarsen(icfFlowData *flowData, icfMesh *mesh)
+{
+
+  icfTri  **triLeafs  = mesh->triLeafs;
+  icfEdge **edgeLeafs = mesh->edgeLeafs;
+
+  int i;
+  int nTris  = mesh->nTriLeafs;
+  int nEdges = mesh->nEdgeLeafs;
+  int nMerge = 0;
+
+  icfRefineFun coarseFun = flowData->coarseFun;
+  check(coarseFun != NULL,
+      "Coarsening function has not been defined.");
+
+  /*-------------------------------------------------------
+  | Mark all triangles and respective edges to coarsen
+  -------------------------------------------------------*/
+  for (i = 0; i < nTris; i++)
+  {
+    icfTri *t = triLeafs[i];
+
+    if (t->isLeaf == TRUE && 
+        t->merge == FALSE &&
+        coarseFun(flowData, t) == TRUE)
+    {
+      icfTri_markToMerge(t);
+      nMerge++;
+    }
+  }
+
+  /*-------------------------------------------------------
+  | Merge all marked leafs
+  -------------------------------------------------------*/
+  for (i = 0; i < nEdges; i++)
+  {
+    icfEdge *e = edgeLeafs[i];
+
+    //if (e->merge == TRUE && e->isSplit == TRUE)
+      //icfEdge_merge(e);
+
+  }
+
+  /*-------------------------------------------------------
+  | Update the mesh leafs
+  -------------------------------------------------------*/
+  icfMesh_update(mesh);
+
+  return;
+error:
+  return;
+
+} /* icfMesh_coarsen() */
+
+/**********************************************************
 * Function: icfMesh_update()
 *----------------------------------------------------------
 * Function to update all mesh leafs structures and 
@@ -383,7 +444,8 @@ void icfMesh_update(icfMesh *mesh)
   /*-------------------------------------------------------
   | Count leafs in both triangle- and edge-trees
   | This is the point, where triangles and edges
-  | get their global indices
+  | get their global indices and their "isLeaf" property
+  | is set to FALSE as default
   -------------------------------------------------------*/
   int iTri = 0;
   int iEdge = 0;
@@ -394,7 +456,8 @@ void icfMesh_update(icfMesh *mesh)
        cur != NULL; cur = cur->next)
   {
     icfTri *t = (icfTri*)cur->value;
-    t->index = iTri;
+    t->index  = iTri;
+    t->isLeaf = FALSE;
     iTri++;
 
     if (t->isSplit == FALSE)
@@ -405,7 +468,8 @@ void icfMesh_update(icfMesh *mesh)
        cur != NULL; cur = cur->next)
   {
     icfEdge *e = (icfEdge*)cur->value;
-    e->index = iEdge;
+    e->index  = iEdge;
+    e->isLeaf = FALSE;
     iEdge++;
 
     if (e->isSplit == FALSE)
@@ -429,7 +493,7 @@ void icfMesh_update(icfMesh *mesh)
   mesh->triLeafs = newTriLeafs;
 
   /*-------------------------------------------------------
-  | Set pointer-array to triangles
+  | Set pointer-array to triangles and mark leafs
   -------------------------------------------------------*/
   iTri  = 0;
   
@@ -440,13 +504,14 @@ void icfMesh_update(icfMesh *mesh)
 
     if (t->isSplit == FALSE)
     {
+      t->isLeaf            = TRUE;
       mesh->triLeafs[iTri] = t;
       iTri++;
     }
   }
 
   /*-------------------------------------------------------
-  | Set pointer-array to edges
+  | Set pointer-array to edges and mark leafs
   -------------------------------------------------------*/
   iEdge = 0;
   for (cur = mesh->edgeStack->first; 
@@ -456,6 +521,7 @@ void icfMesh_update(icfMesh *mesh)
 
     if (e->isSplit == FALSE)
     {
+      e->isLeaf              = TRUE;
       mesh->edgeLeafs[iEdge] = e;
       iEdge++;
     }
@@ -481,8 +547,6 @@ void icfMesh_update(icfMesh *mesh)
     n->index = iNode;
     iNode++;
   }
-
-
 
   /*-------------------------------------------------------
   | Update arrays for all boundary nodes and boundary 
