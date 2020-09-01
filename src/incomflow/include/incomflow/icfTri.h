@@ -87,6 +87,7 @@ typedef struct icfTri {
   | Position of this triangle in mesh stack 
   -------------------------------------------------------*/
   icfListNode *stackPos;
+  icfIndex     leafPos;
 
 } icfTri;
 

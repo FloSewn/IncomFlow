@@ -408,9 +408,9 @@ void icfMesh_coarsen(icfFlowData *flowData, icfMesh *mesh)
   {
     icfEdge *e = edgeLeafs[i];
 
-    //if (e->merge == TRUE && e->isSplit == TRUE)
-      //icfEdge_merge(e);
-
+    if (e != NULL)
+      if (e->merge == TRUE && e->isLeaf == TRUE)
+        icfEdge_merge(e);
   }
 
   /*-------------------------------------------------------
@@ -464,6 +464,10 @@ void icfMesh_update(icfMesh *mesh)
       nTriLeafs += 1;
   }
 
+#if (ICF_DEBUG > 2)
+  icfPrint("FOUND %d TRI LEAFS", nTriLeafs);
+#endif
+
   for (cur = mesh->edgeStack->first; 
        cur != NULL; cur = cur->next)
   {
@@ -475,6 +479,10 @@ void icfMesh_update(icfMesh *mesh)
     if (e->isSplit == FALSE)
       nEdgeLeafs += 1;
   }
+
+#if (ICF_DEBUG > 2)
+  icfPrint("FOUND %d EDGE LEAFS", nEdgeLeafs);
+#endif
 
   /*-------------------------------------------------------
   | reallocate memory for leafs
@@ -506,6 +514,7 @@ void icfMesh_update(icfMesh *mesh)
     {
       t->isLeaf            = TRUE;
       mesh->triLeafs[iTri] = t;
+      t->leafPos           = iTri;
       iTri++;
     }
   }
@@ -523,6 +532,7 @@ void icfMesh_update(icfMesh *mesh)
     {
       e->isLeaf              = TRUE;
       mesh->edgeLeafs[iEdge] = e;
+      e->leafPos             = iEdge;
       iEdge++;
     }
   }

@@ -89,6 +89,7 @@ error:
 **********************************************************/
 int icfNode_destroy(icfNode *node)
 {
+  icfMesh_remNode(node->mesh, node);
   free(node);
   return 0;
 } /* icfNode_destroy() */

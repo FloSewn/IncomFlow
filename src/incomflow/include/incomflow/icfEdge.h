@@ -77,6 +77,7 @@ typedef struct icfEdge {
   | Position in mesh's edge stack
   -------------------------------------------------------*/
   icfListNode *stackPos;
+  icfIndex     leafPos;
 
   /*-------------------------------------------------------
   | Median-dual grid metrics
@@ -145,5 +146,15 @@ void icfEdge_setTris(icfEdge *edge,
 * 
 **********************************************************/
 void icfEdge_split(icfEdge *e);
+
+/**********************************************************
+* Function: icfEdge_merge
+*----------------------------------------------------------
+* Merge a marked edge and its associated triangles
+* @param: e - edge structure to split
+*----------------------------------------------------------
+* 
+**********************************************************/
+void icfEdge_merge(icfEdge *e);
 
 #endif

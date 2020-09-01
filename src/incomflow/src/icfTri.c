@@ -84,6 +84,7 @@ icfTri *icfTri_create(icfMesh *mesh)
   | Position of this triangle in mesh stack 
   -------------------------------------------------------*/
   tri->stackPos = icfMesh_addTri(mesh, tri);
+  tri->leafPos  = -1;
 
   return tri;
 error:
@@ -101,6 +102,7 @@ error:
 **********************************************************/
 int icfTri_destroy(icfTri *tri)
 {
+  icfMesh_remTri(tri->mesh, tri);
   free(tri);
   return 0;
 } /* icfTri_destroy() */

@@ -51,6 +51,7 @@ char *test_basic_structures()
   icfMesh *mesh       = icfMesh_create();
   flowData->mesh      = mesh;
   flowData->refineFun = refineFun;
+  flowData->coarseFun = refineFun;
 
   /*----------------------------------------------------------
   | Define boundaries
@@ -133,8 +134,14 @@ char *test_basic_structures()
   int i = 0;
   for (i = 0; i < 2; i++)
   {
-    icfPrint("------- ITERATION %d --------", i);
+    icfPrint("------- REFINEMENT %d --------", i);
     icfMesh_refine(flowData, mesh);
+  }
+
+  for (i = 0; i < 1; i++)
+  {
+    icfPrint("------- COARSENING %d --------", i);
+    icfMesh_coarsen(flowData, mesh);
   }
 
   /*----------------------------------------------------------
