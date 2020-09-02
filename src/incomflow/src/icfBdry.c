@@ -162,8 +162,8 @@ void icfBdry_remNode(icfBdry *bdry, icfNode *node)
     index = 0;
   else if (bdry == node->bdry[1])
     index = 1;
-  else  
-    log_err("icfBdry_remNode(): bdry not part of node.");
+  else  /* Node not part of bdry */
+    return;
 
   icfList_remove(bdry->nodeStack, node->bdryStackPos[index]);
   bdry->nNodes -= 1;
@@ -185,8 +185,8 @@ error:
 **********************************************************/
 void icfBdry_remEdge(icfBdry *bdry, icfEdge *edge)
 {
-  check(bdry == edge->bdry, 
-      "icfBdry_remEdge(): bdry not part of edge.");
+  if (bdry != edge->bdry) /* edge not part of bdry */
+    return;
 
   icfList_remove(bdry->edgeStack, edge->bdryStackPos);
   bdry->nEdges -= 1;

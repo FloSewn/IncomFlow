@@ -100,6 +100,8 @@ error:
 int icfEdge_destroy(icfEdge *edge)
 {
   icfMesh_remEdge(edge->mesh, edge);
+  if (edge->bdry != NULL)
+    icfBdry_remEdge(edge->bdry, edge);
   free(edge->bdryNorm);
   free(edge);
   return 0;
@@ -453,6 +455,7 @@ void icfEdge_split(icfEdge *e)
     t_L->t_c[1]    = tL1;
     tL1->parent    = t_L;
     tL1->treeLevel = t_L->treeLevel + 1;
+
   }
 
 
@@ -495,6 +498,7 @@ void icfEdge_split(icfEdge *e)
     t_R->t_c[1]    = tR1;
     tR1->parent    = t_R;
     tR1->treeLevel = t_R->treeLevel + 1;
+
   }
 
   /*-------------------------------------------------------
@@ -509,6 +513,7 @@ void icfEdge_split(icfEdge *e)
   e->e_c[1]      = eH1;
   eH1->parent    = e;
   eH1->treeLevel = e->treeLevel + 1;
+
 
   e->e_c[2] = eV0;
   if (eV0 != NULL)
@@ -584,6 +589,18 @@ void icfEdge_merge(icfEdge *e)
   icfTri  *tR1 = n->t_c[1];
   icfTri  *tL1 = n->t_c[2];
   icfTri  *tL0 = n->t_c[3];
+
+  /*-------------------------------------------------------
+  | Check that all siblings are leafs
+  -------------------------------------------------------*/
+  if (tR0 != NULL && tR0->isLeaf == FALSE)
+    return;
+  if (tR1 != NULL && tR1->isLeaf == FALSE)
+    return;
+  if (tL0 != NULL && tL0->isLeaf == FALSE)
+    return;
+  if (tL1 != NULL && tL1->isLeaf == FALSE)
+    return;
 
 #if (ICF_DEBUG > 2)
   icfPrint("MERGE EDGE (%d,%d)",
@@ -746,6 +763,9 @@ void icfEdge_merge(icfEdge *e)
   -------------------------------------------------------*/
   if (tL_p != NULL)
   {
+    /*-----------------------------------------------------
+    | neighbors of tL
+    -----------------------------------------------------*/
     if (e3 == tL_p->e[0]) 
     {
       icfTri_setTris(tL_p,  tR_p, t2, t3);
@@ -764,7 +784,9 @@ void icfEdge_merge(icfEdge *e)
     else
       log_err("Error in mesh connectivity.");
 
-      
+    /*-----------------------------------------------------
+    | neighbors of edges e2 & e3
+    -----------------------------------------------------*/
     if (e3->t[0] == tL0)
       e3->t[0] = tL_p;
     else if (e3->t[1] == tL0)
@@ -778,6 +800,33 @@ void icfEdge_merge(icfEdge *e)
       e2->t[1] = tL_p;
     else
       log_err("Error in mesh connectivity");
+
+    /*-----------------------------------------------------
+    | neighbors of triangles t2 & t3
+    -----------------------------------------------------*/
+    if (t3 != NULL)
+    {
+      if (t3->t[0] == tL0)
+        t3->t[0] = tL_p;
+      else if (t3->t[1] == tL0)
+        t3->t[1] = tL_p;
+      else if (t3->t[2] == tL0)
+        t3->t[2] = tL_p;
+      else
+        log_err("Error in mesh connectivity");
+    }
+
+    if (t2 != NULL)
+    {
+      if (t2->t[0] == tL1)
+        t2->t[0] = tL_p;
+      else if (t2->t[1] == tL1)
+        t2->t[1] = tL_p;
+      else if (t2->t[2] == tL1)
+        t2->t[2] = tL_p;
+      else
+        log_err("Error in mesh connectivity");
+    }
   }
 
   /*-------------------------------------------------------
@@ -785,6 +834,10 @@ void icfEdge_merge(icfEdge *e)
   -------------------------------------------------------*/
   if (tR_p != NULL)
   {
+
+    /*-----------------------------------------------------
+    | neighbors of tR
+    -----------------------------------------------------*/
     if (e0 == tR_p->e[0]) 
     {
       icfTri_setTris(tR_p,  t1, tL_p, t0);
@@ -803,7 +856,9 @@ void icfEdge_merge(icfEdge *e)
     else
       log_err("Error in mesh connectivity.");
 
-      
+    /*-----------------------------------------------------
+    | neighbors of edges e0 & e1
+    -----------------------------------------------------*/
     if (e0->t[0] == tR0)
       e0->t[0] = tR_p;
     else if (e0->t[1] == tR0)
@@ -811,13 +866,39 @@ void icfEdge_merge(icfEdge *e)
     else
       log_err("Error in mesh connectivity");
 
-
     if (e1->t[0] == tR1)
       e1->t[0] = tR_p;
     else if (e1->t[1] == tR1)
       e1->t[1] = tR_p;
     else
       log_err("Error in mesh connectivity");
+
+    /*-----------------------------------------------------
+    | neighbors of triangles t0 & t1
+    -----------------------------------------------------*/
+    if (t0 != NULL)
+    {
+      if (t0->t[0] == tR0)
+        t0->t[0] = tR_p;
+      else if (t0->t[1] == tR0)
+        t0->t[1] = tR_p;
+      else if (t0->t[2] == tR0)
+        t0->t[2] = tR_p;
+      else
+        log_err("Error in mesh connectivity");
+    }
+
+    if (t1 != NULL)
+    {
+      if (t1->t[0] == tR1)
+        t1->t[0] = tR_p;
+      else if (t1->t[1] == tR1)
+        t1->t[1] = tR_p;
+      else if (t1->t[2] == tR1)
+        t1->t[2] = tR_p;
+      else
+        log_err("Error in mesh connectivity");
+    }
   }
        
 
@@ -850,7 +931,6 @@ void icfEdge_merge(icfEdge *e)
 
     tL_p->t_c[0]  = NULL;
     tL_p->t_c[1]  = NULL;
-    tL_p->n_c     = NULL;
     tL_p->isSplit = FALSE;
 
   }
@@ -881,7 +961,6 @@ void icfEdge_merge(icfEdge *e)
 
     tR_p->t_c[0]  = NULL;
     tR_p->t_c[1]  = NULL;
-    tR_p->n_c     = NULL;
     tR_p->isSplit = FALSE;
 
   }

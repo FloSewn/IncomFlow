@@ -50,6 +50,7 @@ typedef struct icfMesh {
   int       nTriLeafs;
   icfTri  **triLeafs;
 
+
 } icfMesh;
 
 

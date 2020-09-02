@@ -64,6 +64,7 @@ icfMesh *icfMesh_create(void)
   mesh->nTriLeafs = 0;
   mesh->triLeafs = (icfTri**) calloc(0, sizeof(icfTri*));
 
+
   return mesh;
 error:
   return NULL;

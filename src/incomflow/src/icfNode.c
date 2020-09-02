@@ -9,6 +9,7 @@
 #include "incomflow/icfList.h"
 #include "incomflow/icfNode.h"
 #include "incomflow/icfMesh.h"
+#include "incomflow/icfBdry.h"
 #include "incomflow/icfFlowData.h"
 
 /**********************************************************
@@ -90,6 +91,12 @@ error:
 int icfNode_destroy(icfNode *node)
 {
   icfMesh_remNode(node->mesh, node);
+
+  //if (node->bdry[0] != NULL)
+  //  icfBdry_remNode(node->bdry[0], node);
+  //else if (node->bdry[1] != NULL)
+  //  icfBdry_remNode(node->bdry[1], node);
+
   free(node);
   return 0;
 } /* icfNode_destroy() */
