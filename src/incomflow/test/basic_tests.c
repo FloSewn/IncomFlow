@@ -132,13 +132,14 @@ char *test_basic_structures()
   | Refine the mesh
   ----------------------------------------------------------*/
   int i = 0;
-  for (i = 0; i < 6; i++)
+  int j = 9;
+  for (i = 0; i < j; i++)
   {
     icfPrint("------- REFINEMENT %d --------", i);
     icfMesh_refine(flowData, mesh);
   }
 
-  for (i = 0; i < 5; i++)
+  for (i = 0; i < j; i++)
   {
     icfPrint("------- COARSENING %d --------", i);
     icfMesh_coarsen(flowData, mesh);

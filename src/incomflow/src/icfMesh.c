@@ -290,11 +290,6 @@ void icfMesh_refine(icfFlowData *flowData, icfMesh *mesh)
 {
   icfListNode *cur;
 
-  int nSplit = 0;
-
-  icfDouble ICF_MAX_RATIO = 4.0;
-  int       ICF_MAX_SPLIT = 1;
-
   icfRefineFun refineFun = flowData->refineFun;
   check(refineFun != NULL,
       "Refinement function has not been defined.");
@@ -308,49 +303,19 @@ void icfMesh_refine(icfFlowData *flowData, icfMesh *mesh)
     icfTri *t = (icfTri*)cur->value;
 
     if (refineFun(flowData, t) == TRUE && t->isSplit == FALSE)
-    {
       icfTri_markToSplit(t);
-      nSplit++;
-    }
-  }
 
+  }
   /*-------------------------------------------------------
   | Split all marked edges 
-  | and perform successive triangle marking if triangles
-  | have bad aspect ratios
   -------------------------------------------------------*/
-  int iter = 0;
-
-  while (nSplit > 0 && iter < ICF_MAX_SPLIT)
+  for (cur = mesh->edgeStack->first; 
+       cur != NULL; cur = cur->next)
   {
-    nSplit = 0;
-    iter  += 1;
+    icfEdge *e = (icfEdge*)cur->value;
 
-    for (cur = mesh->edgeStack->first; 
-         cur != NULL; cur = cur->next)
-    {
-      icfEdge *e = (icfEdge*)cur->value;
-
-      if (e->split == TRUE && e->isSplit == FALSE)
-        icfEdge_split(e);
-    }
-
-    /*-------------------------------------------------------
-    | Mark all triangles and respective edges to refine
-    | if their aspect ratio is bad
-    -------------------------------------------------------*/
-    for (cur = mesh->triStack->first; 
-         cur != NULL; cur = cur->next)
-    {
-      icfTri *t = (icfTri*)cur->value;
-
-      if (t->aspectRatio > ICF_MAX_RATIO 
-          && t->isSplit == FALSE)
-      {
-        icfTri_markToSplit(t);
-        nSplit++;
-      }
-    }
+    if (e->split == TRUE && e->isSplit == FALSE)
+      icfEdge_split(e);
   }
 
   /*-------------------------------------------------------
@@ -380,7 +345,6 @@ void icfMesh_coarsen(icfFlowData *flowData, icfMesh *mesh)
   int i;
   int nTris  = mesh->nTriLeafs;
   int nEdges = mesh->nEdgeLeafs;
-  int nMerge = 0;
 
   icfRefineFun coarseFun = flowData->coarseFun;
   check(coarseFun != NULL,
@@ -393,13 +357,9 @@ void icfMesh_coarsen(icfFlowData *flowData, icfMesh *mesh)
   {
     icfTri *t = triLeafs[i];
 
-    if (t->isLeaf == TRUE && 
-        t->merge == FALSE &&
-        coarseFun(flowData, t) == TRUE)
-    {
+    if (t->merge == FALSE && coarseFun(flowData, t) == TRUE)
       icfTri_markToMerge(t);
-      nMerge++;
-    }
+
   }
 
   /*-------------------------------------------------------
@@ -410,7 +370,7 @@ void icfMesh_coarsen(icfFlowData *flowData, icfMesh *mesh)
     icfEdge *e = edgeLeafs[i];
 
     if (e != NULL)
-      if (e->merge == TRUE && e->isLeaf == TRUE)
+      if (e->merge == TRUE)
         icfEdge_merge(e);
   }
 
@@ -447,6 +407,8 @@ void icfMesh_update(icfMesh *mesh)
   | This is the point, where triangles and edges
   | get their global indices and their "isLeaf" property
   | is set to FALSE as default
+  | 
+  | Also: set default values for some attributes
   -------------------------------------------------------*/
   int iTri = 0;
   int iEdge = 0;
@@ -459,6 +421,8 @@ void icfMesh_update(icfMesh *mesh)
     icfTri *t = (icfTri*)cur->value;
     t->index  = iTri;
     t->isLeaf = FALSE;
+    t->merge  = FALSE;
+    t->split  = FALSE;
     iTri++;
 
     if (t->isSplit == FALSE)
@@ -475,6 +439,8 @@ void icfMesh_update(icfMesh *mesh)
     icfEdge *e = (icfEdge*)cur->value;
     e->index  = iEdge;
     e->isLeaf = FALSE;
+    e->merge  = FALSE;
+    e->split  = FALSE;
     iEdge++;
 
     if (e->isSplit == FALSE)
